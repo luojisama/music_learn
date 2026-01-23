@@ -102,17 +102,42 @@ export default function Search() {
             
             // 结果排序逻辑优化：优先匹配原唱和完全匹配名称的歌曲
             normalizedResults = normalizedResults.sort((a, b) => {
-              const aName = a.name.toLowerCase();
-              const bName = b.name.toLowerCase();
-              const k = finalQuery.toLowerCase();
+              const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '').replace(/[（(]/g, '(').replace(/[）)]/g, ')');
+              const aName = normalize(a.name);
+              const bName = normalize(b.name);
+              const k = normalize(finalQuery);
               
-              // 完全匹配关键词
+              const aAr = a.ar?.map(ar => ar.name.toLowerCase()).join(',') || '';
+              const bAr = b.ar?.map(ar => ar.name.toLowerCase()).join(',') || '';
+              
+              // 1. 完全匹配关键词 (忽略空格和括号全半角)
               const aExact = aName === k;
               const bExact = bName === k;
               if (aExact && !bExact) return -1;
               if (!aExact && bExact) return 1;
+
+              // 2. 惩罚包含“翻唱”、“cover”、“中文版”、“AI”等字样的非官方结果
+              const isFanMade = (name: string, artists: string) => {
+                const n = name.toLowerCase();
+                const fanKeywords = ['cover', '翻唱', '中文版', 'ai', '改编', 'remix', '钢琴', 'piano', 'ver.）', 'ver.)中文'];
+                // 如果搜索词本身不含这些词，但结果包含，则降级
+                return fanKeywords.some(kw => n.includes(kw) && !k.includes(kw));
+              };
+
+              const aIsFan = isFanMade(a.name, aAr);
+              const bIsFan = isFanMade(b.name, bAr);
+              if (!aIsFan && bIsFan) return -1;
+              if (aIsFan && !bIsFan) return 1;
+
+              // 3. 优先展示官方歌手 (如果搜索词包含歌手名或歌曲本身非常匹配)
+              // 针对 MyGO!!!!! 这种特定歌手进行优化
+              const isOfficialAr = (s: string) => s.includes('mygo') || s.includes('crychic') || s.includes('ave mujica');
+              const aIsOfficial = isOfficialAr(aAr);
+              const bIsOfficial = isOfficialAr(bAr);
+              if (aIsOfficial && !bIsOfficial) return -1;
+              if (!aIsOfficial && bIsOfficial) return 1;
               
-              // 包含关键词且不含 "(Instrumental)" 或 "伴奏"
+              // 4. 包含关键词且不含 "(Instrumental)" 或 "伴奏"
               const aIsInst = aName.includes('instrumental') || aName.includes('伴奏');
               const bIsInst = bName.includes('instrumental') || bName.includes('伴奏');
               if (!aIsInst && bIsInst) return -1;
