@@ -31,14 +31,16 @@ async function handler(req: NextRequest, params: { path: string[] }) {
   const endpoint = path.join('_');
 
   // Find the method in the API object
-  // Sometimes methods are nested or named differently in the package
   let method = NeteaseCloudMusicApi[endpoint];
   
-  // Special case for some common endpoints that might be nested
   if (!method) {
-    // Try to find the method in a case-insensitive way or with other patterns
     const keys = Object.keys(NeteaseCloudMusicApi);
-    const foundKey = keys.find(k => k.toLowerCase() === endpoint.toLowerCase());
+    // 尝试下划线转驼峰 (例如 cloud_search -> cloudsearch)
+    const camelEndpoint = endpoint.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    const foundKey = keys.find(k => 
+      k.toLowerCase() === endpoint.replace(/_/g, '').toLowerCase() || 
+      k.toLowerCase() === camelEndpoint.toLowerCase()
+    );
     if (foundKey) {
       method = NeteaseCloudMusicApi[foundKey];
     }

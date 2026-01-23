@@ -4,7 +4,9 @@ const API_BASE = '/api/music';
 
 export const musicApi = {
   search: async (keywords: string, type = 1) => {
-    return axios.get(`${API_BASE}/search`, { params: { keywords, type } });
+    // 歌曲搜索优先使用 cloudsearch，歌单搜索使用 search
+    const endpoint = type === 1 ? 'cloudsearch' : 'search';
+    return axios.get(`${API_BASE}/${endpoint}`, { params: { keywords, type } });
   },
   getSongUrl: async (id: number | string) => {
     return axios.get(`${API_BASE}/song_url/v1`, { params: { id, level: 'standard' } });

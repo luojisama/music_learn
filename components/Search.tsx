@@ -90,8 +90,10 @@ export default function Search() {
       const res = await musicApi.search(query, type);
       
       if (searchType === 'song') {
-        if (res.data.result && res.data.result.songs) {
-          const rawSongs = res.data.result.songs as RawSong[];
+        // 兼容 search 和 cloudsearch 的返回结构
+        const songs = res.data.result?.songs || res.data.songs || [];
+        if (songs && songs.length > 0) {
+          const rawSongs = songs as RawSong[];
           const normalizedResults = rawSongs.map(normalizeSong);
           const missingCoverIds = normalizedResults
             .filter((song) => !getCoverUrl(song) && song.id)
