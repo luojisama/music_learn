@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   title: "Sing to Learn Japanese",
   description: "Learn Japanese through singing",
   icons: {
-    icon: "https://blog.shiro.team/favicon/favicon-light-128.png",
-    apple: "https://blog.shiro.team/favicon/favicon-light-128.png",
+    icon: "https://blog.shiro.team/avatar.png",
+    apple: "https://blog.shiro.team/avatar.png",
   },
 };
 
