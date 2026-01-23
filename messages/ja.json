@@ -1,0 +1,21 @@
+{
+  "Search": {
+    "placeholder": "曲を検索...",
+    "empty": "お気に入りの日本の歌を検索",
+    "no_result": "曲が見つかりません"
+  },
+  "Library": {
+    "favorites": "お気に入り",
+    "history": "履歴",
+    "empty_favorites": "お気に入りはまだありません",
+    "empty_history": "履歴はまだありません"
+  },
+  "Lyrics": {
+    "no_lyrics": "歌詞がありません",
+    "loop_line": "↺ この行をループ中",
+    "auto_romaji": "自動ローマ字"
+  },
+  "Player": {
+    "speed": "速度"
+  }
+}

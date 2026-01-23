@@ -1,0 +1,21 @@
+{
+  "Search": {
+    "placeholder": "Search songs...",
+    "empty": "Search for your favorite Japanese songs",
+    "no_result": "No songs found"
+  },
+  "Library": {
+    "favorites": "Favorites",
+    "history": "History",
+    "empty_favorites": "No favorites yet",
+    "empty_history": "No history yet"
+  },
+  "Lyrics": {
+    "no_lyrics": "No Lyrics Available",
+    "loop_line": "↺ Looping this line",
+    "auto_romaji": "Auto Romaji"
+  },
+  "Player": {
+    "speed": "Speed"
+  }
+}
