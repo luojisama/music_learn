@@ -76,18 +76,22 @@ export default function Search() {
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const handleSearch = async (e?: React.FormEvent, searchQuery?: string) => {
+    if (e) e.preventDefault();
+    const finalQuery = searchQuery || query;
+    if (!finalQuery.trim()) return;
 
-    addToSearchHistory(query);
+    if (!searchQuery) {
+      addToSearchHistory(finalQuery);
+    }
+    
     setLoading(true);
     setResults([]);
     setPlaylists([]);
 
     try {
       const type = searchType === 'song' ? 1 : 1000;
-      const res = await musicApi.search(query, type);
+      const res = await musicApi.search(finalQuery, type);
       
       if (searchType === 'song') {
         // 兼容 search 和 cloudsearch 的返回结构
@@ -253,11 +257,21 @@ export default function Search() {
     }
   };
 
+  const handleTypeSwitch = (type: 'song' | 'playlist') => {
+    setSearchType(type);
+    if (query.trim()) {
+      // Use a small timeout to ensure state has updated or pass the type directly
+      // Since handleSearch uses the searchType state, we might need to pass it or use a separate function
+      // For simplicity, let's just trigger it; handleSearch will use the latest searchType if we're careful
+      setTimeout(() => handleSearch(), 0);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-transparent">
       <div className="p-4 space-y-3">
         {searchType === 'song' ? (
-          <form onSubmit={handleSearch} className="relative group">
+          <form onSubmit={(e) => handleSearch(e)} className="relative group">
             <SearchIcon className="absolute left-4 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
             <input
               type="text"
@@ -269,7 +283,7 @@ export default function Search() {
           </form>
         ) : (
           <div className="space-y-3">
-            <form onSubmit={handleSearch} className="relative group">
+            <form onSubmit={(e) => handleSearch(e)} className="relative group">
               <SearchIcon className="absolute left-4 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
               <input
                 type="text"
@@ -306,7 +320,7 @@ export default function Search() {
 
         <div className="flex gap-2 p-1 bg-muted/30 rounded-xl">
           <button
-            onClick={() => setSearchType('song')}
+            onClick={() => handleTypeSwitch('song')}
             className={clsx(
               "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all",
               searchType === 'song' ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
@@ -315,7 +329,7 @@ export default function Search() {
             歌曲
           </button>
           <button
-            onClick={() => setSearchType('playlist')}
+            onClick={() => handleTypeSwitch('playlist')}
             className={clsx(
               "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all",
               searchType === 'playlist' ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
@@ -342,9 +356,7 @@ export default function Search() {
                   key={i}
                   onClick={() => {
                     setQuery(h);
-                    // Trigger search manually since we can't easily trigger form submit
-                    const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                    handleSearch(fakeEvent);
+                    handleSearch(undefined, h);
                   }}
                   className="px-3 py-1 bg-muted/40 hover:bg-muted/60 text-xs rounded-full transition-all"
                 >
