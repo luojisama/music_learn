@@ -13,17 +13,23 @@ import { useTranslations } from 'next-intl';
 export default function Search() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Song[]>([]);
+  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [searchType, setSearchType] = useState<'song' | 'playlist'>('song');
   const [loading, setLoading] = useState(false);
   
   const { setSong, setLyrics } = usePlayerStore();
   const { addToHistory, addToFavorites, favorites, removeFromFavorites } = useLibraryStore();
   const t = useTranslations('Search');
+
   const getCoverUrl = (song: Song) => {
     const rawUrl = song.al?.picUrl ?? song.album?.picUrl ?? song.picUrl;
     return rawUrl ? rawUrl.replace(/^http:\/\//, 'https://') : undefined;
   };
+
   const normalizeCoverUrl = (url?: string) => (url ? url.replace(/^http:\/\//, 'https://') : undefined);
+
   type RawSong = Partial<Song> & { id: number; name: string; artists?: { id: number; name: string }[]; duration?: number };
+  
   const normalizeSong = (song: RawSong): Song => {
     const album = song.al ?? (song.album ? { id: song.album.id ?? song.id, name: song.album.name ?? song.name, picUrl: song.album.picUrl } : undefined);
     const safeAlbum = album ?? (song.picUrl ? { id: song.id, name: song.name, picUrl: song.picUrl } : undefined);
@@ -44,45 +50,70 @@ export default function Search() {
     if (!query.trim()) return;
 
     setLoading(true);
+    setResults([]);
+    setPlaylists([]);
+
     try {
-      const res = await musicApi.search(query);
-      if (res.data.result && res.data.result.songs) {
-        const rawSongs = res.data.result.songs as RawSong[];
-        const normalizedResults = rawSongs.map(normalizeSong);
-        const missingCoverIds = normalizedResults
-          .filter((song) => !getCoverUrl(song) && song.id)
-          .map((song) => song.id);
+      const type = searchType === 'song' ? 1 : 1000;
+      const res = await musicApi.search(query, type);
+      
+      if (searchType === 'song') {
+        if (res.data.result && res.data.result.songs) {
+          const rawSongs = res.data.result.songs as RawSong[];
+          const normalizedResults = rawSongs.map(normalizeSong);
+          const missingCoverIds = normalizedResults
+            .filter((song) => !getCoverUrl(song) && song.id)
+            .map((song) => song.id);
 
-        if (missingCoverIds.length > 0) {
-          try {
-            const detailsRes = await musicApi.getSongDetails(missingCoverIds);
-            const songsWithDetails = (detailsRes.data?.songs || []) as Array<{ id: number; al?: { picUrl?: string } }>;
-            const coverMap = new Map(songsWithDetails.map((s) => [s.id, s.al?.picUrl]));
+          if (missingCoverIds.length > 0) {
+            try {
+              const detailsRes = await musicApi.getSongDetails(missingCoverIds);
+              const songsWithDetails = (detailsRes.data?.songs || []) as Array<{ id: number; al?: { picUrl?: string } }>;
+              const coverMap = new Map(songsWithDetails.map((s) => [s.id, s.al?.picUrl]));
 
-            setResults(
-              normalizedResults.map((song) => {
-                const newCover = coverMap.get(song.id);
-                const cover = normalizeCoverUrl(newCover);
-                if (!cover) return song;
-                return {
-                  ...song,
-                  al: song.al ? { ...song.al, picUrl: cover } : { id: song.id, name: song.name, picUrl: cover },
-                  picUrl: cover,
-                };
-              })
-            );
-          } catch (err) {
-            console.error('Failed to fetch song details for covers', err);
+              setResults(
+                normalizedResults.map((song) => {
+                  const newCover = coverMap.get(song.id);
+                  const cover = normalizeCoverUrl(newCover);
+                  if (!cover) return song;
+                  return {
+                    ...song,
+                    al: song.al ? { ...song.al, picUrl: cover } : { id: song.id, name: song.name, picUrl: cover },
+                    picUrl: cover,
+                  };
+                })
+              );
+            } catch (err) {
+              console.error('Failed to fetch song details for covers', err);
+              setResults(normalizedResults);
+            }
+          } else {
             setResults(normalizedResults);
           }
-        } else {
-          setResults(normalizedResults);
         }
       } else {
-        setResults([]);
+        if (res.data.result && res.data.result.playlists) {
+          setPlaylists(res.data.result.playlists);
+        }
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlaylistClick = async (playlist: any) => {
+    setLoading(true);
+    try {
+      const res = await musicApi.getPlaylistDetail(playlist.id);
+      if (res.data.playlist && res.data.playlist.tracks) {
+        const tracks = res.data.playlist.tracks as RawSong[];
+        setResults(tracks.map(normalizeSong));
+        setSearchType('song');
+      }
+    } catch (error) {
+      console.error("Failed to load playlist tracks", error);
     } finally {
       setLoading(false);
     }
@@ -159,17 +190,38 @@ export default function Search() {
 
   return (
     <div className="flex flex-col h-full bg-transparent">
-      <div className="p-4">
+      <div className="p-4 space-y-3">
         <form onSubmit={handleSearch} className="relative group">
           <SearchIcon className="absolute left-4 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={t('placeholder')}
+            placeholder={searchType === 'song' ? t('placeholder') : '搜索歌单...'}
             className="w-full pl-12 pr-4 py-2.5 bg-muted/50 backdrop-blur-sm border-2 border-transparent focus:border-primary/50 rounded-2xl focus:outline-none focus:ring-0 text-sm transition-all"
           />
         </form>
+
+        <div className="flex gap-2 p-1 bg-muted/30 rounded-xl">
+          <button
+            onClick={() => setSearchType('song')}
+            className={clsx(
+              "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all",
+              searchType === 'song' ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            歌曲
+          </button>
+          <button
+            onClick={() => setSearchType('playlist')}
+            className={clsx(
+              "flex-1 py-1.5 text-xs font-medium rounded-lg transition-all",
+              searchType === 'playlist' ? "bg-white dark:bg-zinc-800 shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            歌单
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
@@ -179,53 +231,91 @@ export default function Search() {
           </div>
         ) : (
           <div className="flex flex-col gap-1">
-            {results.map((song) => {
-              const coverUrl = getCoverUrl(song);
+            {searchType === 'song' ? (
+              results.map((song) => {
+                const coverUrl = getCoverUrl(song);
 
-              return (
-                <div
-                key={song.id}
-                onClick={() => playSong(song)}
-                className="group flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-              >
-                <div className="relative w-12 h-12 flex-shrink-0">
-                   {coverUrl ? (
-                      <Image
-                        src={coverUrl}
-                        alt={song.name}
-                        width={48}
-                        height={48}
-                        className="w-full h-full object-cover rounded"
-                        referrerPolicy="no-referrer"
-                      />
-                   ) : (
-                      <div className="w-full h-full bg-muted/50 rounded flex items-center justify-center text-muted-foreground">?</div>
-                   )}
-                     <div className="absolute inset-0 bg-black/20 hidden group-hover:flex items-center justify-center rounded">
-                       <Play size={16} className="text-white" fill="white" />
-                     </div>
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate text-foreground">{song.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{song.ar?.map(a => a.name).join(', ')}</div>
-                  </div>
-
-                  <button 
-                    onClick={(e) => toggleFavorite(e, song)}
-                    className={clsx(
-                      "p-2 rounded-full hover:bg-muted transition-colors",
-                      isFavorite(song.id) ? "text-red-500" : "text-muted-foreground opacity-0 group-hover:opacity-100"
-                    )}
+                return (
+                  <div
+                    key={song.id}
+                    onClick={() => playSong(song)}
+                    className="group flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 cursor-pointer transition-all"
                   >
-                    <Heart size={16} fill={isFavorite(song.id) ? "currentColor" : "none"} />
-                  </button>
-                </div>
-              );
-            })}
-            {results.length === 0 && !loading && (
-              <div className="text-center text-muted-foreground text-sm mt-8">
-                {t('empty')}
+                    <div className="relative w-10 h-10 flex-shrink-0">
+                      {coverUrl ? (
+                        <Image
+                          src={coverUrl}
+                          alt={song.name}
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover rounded-lg shadow-sm"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground text-xs">?</div>
+                      )}
+                      <div className="absolute inset-0 bg-black/20 hidden group-hover:flex items-center justify-center rounded-lg">
+                        <Play size={16} className="text-white" fill="white" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{song.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {song.ar.map(a => a.name).join(', ')}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => toggleFavorite(e, song)}
+                      className={clsx(
+                        "p-2 rounded-full hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100",
+                        isFavorite(song.id) ? "text-red-500 opacity-100" : "text-muted-foreground"
+                      )}
+                    >
+                      <Heart size={16} fill={isFavorite(song.id) ? "currentColor" : "none"} />
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              playlists.map((playlist) => {
+                const coverUrl = normalizeCoverUrl(playlist.coverImgUrl);
+
+                return (
+                  <div
+                    key={playlist.id}
+                    onClick={() => handlePlaylistClick(playlist)}
+                    className="group flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 cursor-pointer transition-all"
+                  >
+                    <div className="relative w-12 h-12 flex-shrink-0">
+                      {coverUrl ? (
+                        <Image
+                          src={coverUrl}
+                          alt={playlist.name}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover rounded-lg shadow-sm"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted/50 rounded-lg flex items-center justify-center text-muted-foreground text-xs">?</div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{playlist.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {playlist.trackCount} 首歌曲 · by {playlist.creator?.nickname}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            {!loading && results.length === 0 && playlists.length === 0 && query && (
+              <div className="text-center text-muted-foreground text-xs py-8">
+                未找到结果
               </div>
             )}
           </div>

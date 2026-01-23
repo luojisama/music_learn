@@ -18,6 +18,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Sing to Learn Japanese",
   description: "Learn Japanese through singing",
+  icons: {
+    icon: "https://blog.shiro.team/avatar.png",
+    apple: "https://blog.shiro.team/avatar.png",
+  },
 };
 
 export default async function RootLayout({

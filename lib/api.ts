@@ -3,8 +3,8 @@ import axios from 'axios';
 const API_BASE = '/api/music';
 
 export const musicApi = {
-  search: async (keywords: string) => {
-    return axios.get(`${API_BASE}/search`, { params: { keywords } });
+  search: async (keywords: string, type = 1) => {
+    return axios.get(`${API_BASE}/search`, { params: { keywords, type } });
   },
   getSongUrl: async (id: number | string) => {
     return axios.get(`${API_BASE}/song_url/v1`, { params: { id, level: 'standard' } });
