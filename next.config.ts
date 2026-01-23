@@ -13,7 +13,12 @@ const nextConfig: NextConfig = {
     'node-forge', 
     'pac-proxy-agent', 
     'tunnel', 
-    'yargs'
+    'yargs',
+    'qrcode',
+    'md5',
+    'safe-decode-uri-component',
+    'express',
+    'express-fileupload'
   ],
   images: {
     remotePatterns: [

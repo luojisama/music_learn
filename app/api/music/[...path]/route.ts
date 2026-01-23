@@ -2,22 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-// 强制引入依赖，确保 Vercel 将它们打包到 Serverless 函数中
+// 强制引入并导出，确保 Vercel 将它们打包到 Serverless 函数中且不被 Tree-shaking
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _forceDeps = [
-  require('xml2js'),
-  require('crypto-js'),
-  require('music-metadata'),
-  require('node-forge'),
-  require('pac-proxy-agent'),
-  require('tunnel'),
-  require('yargs'),
-  require('express'),
-  require('express-fileupload'),
-  require('qrcode'),
-  require('md5'),
-  require('safe-decode-uri-component')
-];
+const _forceDeps = {
+  xml2js: require('xml2js'),
+  cryptojs: require('crypto-js'),
+  musicMetadata: require('music-metadata'),
+  nodeForge: require('node-forge'),
+  pacProxyAgent: require('pac-proxy-agent'),
+  tunnel: require('tunnel'),
+  yargs: require('yargs'),
+  express: require('express'),
+  expressFileupload: require('express-fileupload'),
+  qrcode: require('qrcode'),
+  md5: require('md5'),
+  safeDecodeUriComponent: require('safe-decode-uri-component')
+};
+
+// 打印日志以确保依赖已加载（仅在开发环境或构建时可见）
+if (process.env.NODE_ENV === 'development') {
+  console.log('API Dependencies loaded:', Object.keys(_forceDeps));
+}
 
 // Use require to avoid issues with NeteaseCloudMusicApi in serverless environments
 // eslint-disable-next-line @typescript-eslint/no-var-requires
