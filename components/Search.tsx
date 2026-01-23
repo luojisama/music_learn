@@ -29,12 +29,13 @@ export default function Search() {
   const normalizeCoverUrl = (url?: string) => (url ? url.replace(/^http:\/\//, 'https://') : undefined);
 
   type RawSong = Partial<Song> & { 
-    id: number; 
-    name: string; 
-    ar?: { id: number; name: string }[]; 
-    duration?: number;
-    pop?: number; // 增加热度字段
-  };
+     id: number; 
+     name: string; 
+     ar?: { id: number; name: string }[]; 
+     artists?: { id: number; name: string }[]; 
+     duration?: number;
+     pop?: number; // 增加热度字段
+   };
   
   const normalizeSong = (song: RawSong): Song => {
     const album = song.al ?? (song.album ? { id: song.album.id ?? song.id, name: song.album.name ?? song.name, picUrl: song.album.picUrl } : undefined);

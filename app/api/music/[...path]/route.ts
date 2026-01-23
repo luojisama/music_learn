@@ -24,9 +24,11 @@ if (process.env.NODE_ENV === 'development') {
   console.log('API Dependencies loaded:', Object.keys(_forceDeps));
 }
 
-// Use require to avoid issues with NeteaseCloudMusicApi in serverless environments
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const NeteaseCloudMusicApi = require('NeteaseCloudMusicApi');
+// Use import for NeteaseCloudMusicApi to support ESM
+import * as NeteaseModule from 'NeteaseCloudMusicApi';
+
+// 兼容 ESM 和 CJS 的导出结构
+const NeteaseCloudMusicApi = (NeteaseModule as any).default || NeteaseModule;
 
 interface QueryParams {
   cookie?: string;
