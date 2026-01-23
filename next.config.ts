@@ -5,7 +5,16 @@ const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   /* config options here */
-  serverExternalPackages: ['NeteaseCloudMusicApi'],
+  serverExternalPackages: [
+    'NeteaseCloudMusicApi', 
+    'xml2js', 
+    'crypto-js', 
+    'music-metadata', 
+    'node-forge', 
+    'pac-proxy-agent', 
+    'tunnel', 
+    'yargs'
+  ],
   images: {
     remotePatterns: [
       {
