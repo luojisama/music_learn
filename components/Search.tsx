@@ -158,37 +158,63 @@ export default function Search() {
   };
 
   const playSong = async (song: Song) => {
+    const songId = song.id;
     const normalizedSong = normalizeSong(song);
 
-    // Optimistic UI
+    // Optimistic UI - Start by setting the basic info and show loading/playing state
     setSong(normalizedSong); 
     addToHistory(normalizedSong);
 
     try {
-      // 1. Get Song URL (Try VKeys for HQ first, then fallback to Standard)
+      // 1. Get Song URL (Try Viki API -> VKeys -> Standard)
       let url = '';
       let finalSong = normalizedSong;
 
+      // Try Viki API first (as requested)
       try {
-        const vkeyRes = await musicApi.getVKeysSong(song.id);
-        if (vkeyRes.data.code === 200 && vkeyRes.data.data && vkeyRes.data.data.url) {
-          const vData = vkeyRes.data.data;
-          url = vData.url.replace(/^http:/, 'https:');
-          const hqCover = vData.cover ? vData.cover.replace(/^http:/, 'https:') : normalizedSong.picUrl;
-          finalSong = { ...normalizedSong, picUrl: hqCover || normalizedSong.picUrl };
-          console.log('Using VKeys HQ Audio:', vData.quality);
+        const vikiRes = await musicApi.getVikiSongUrl(songId);
+        // Viki API directly returns the URL if successful or an error object
+        if (vikiRes.data && vikiRes.data.url) {
+          url = vikiRes.data.url.replace(/^http:/, 'https:');
+          console.log('Using Viki Audio API');
         }
       } catch (e) {
-        console.warn('VKeys API failed, falling back to standard:', e);
+        console.warn('Viki API failed, trying VKeys:', e);
       }
 
       if (!url) {
-        const urlRes = await musicApi.getSongUrl(song.id);
+        try {
+          const vkeyRes = await musicApi.getVKeysSong(songId);
+          if (vkeyRes.data.code === 200 && vkeyRes.data.data && vkeyRes.data.data.url) {
+            const vData = vkeyRes.data.data;
+            url = vData.url.replace(/^http:/, 'https:');
+            const hqCover = vData.cover ? vData.cover.replace(/^http:/, 'https:') : normalizedSong.picUrl;
+            finalSong = { ...normalizedSong, picUrl: hqCover || normalizedSong.picUrl };
+            console.log('Using VKeys HQ Audio:', vData.quality);
+          }
+        } catch (e) {
+          console.warn('VKeys API failed, falling back to standard:', e);
+        }
+      }
+
+      if (!url) {
+        const urlRes = await musicApi.getSongUrl(songId);
         url = urlRes.data.data[0]?.url;
       }
       
       if (!url) {
-        alert("Cannot play this song (No URL found)");
+        // Double check if the user hasn't switched to another song during the async calls
+        const currentId = usePlayerStore.getState().currentSong?.id;
+        if (currentId === songId) {
+          alert("Cannot play this song (No URL found)");
+        }
+        return;
+      }
+
+      // Check if this song is still the one supposed to be playing
+      const currentIdAfterUrl = usePlayerStore.getState().currentSong?.id;
+      if (currentIdAfterUrl !== songId) {
+        console.log('Song switched during URL fetch, ignoring results for', songId);
         return;
       }
 
@@ -196,16 +222,21 @@ export default function Search() {
       setSong({ ...finalSong, url });
 
       // 2. Get Lyrics
-      const lrcRes = await musicApi.getLyric(song.id);
+      const lrcRes = await musicApi.getLyric(songId);
+      
+      // Final check before setting lyrics
+      const currentIdAfterLrc = usePlayerStore.getState().currentSong?.id;
+      if (currentIdAfterLrc !== songId) {
+        console.log('Song switched during Lyric fetch, ignoring results for', songId);
+        return;
+      }
+
       const lrc = lrcRes.data.lrc?.lyric || '';
       const tlyric = lrcRes.data.tlyric?.lyric || '';
-      
       const parsedLyrics = parseLrc(lrc, tlyric);
       setLyrics(parsedLyrics);
-
     } catch (error) {
-      console.error("Failed to load song data", error);
-      alert("Error loading song");
+      console.error('Play song failed', error);
     }
   };
 

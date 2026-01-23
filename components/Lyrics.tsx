@@ -25,24 +25,32 @@ export default function Lyrics() {
 
   const handleAutoRomaji = async () => {
     if (lyrics.length === 0 || isAutoGenerating) return;
+    const currentSongId = usePlayerStore.getState().currentSong?.id;
+    if (!currentSongId) return;
+    
     setIsAutoGenerating(true);
 
-    // Heuristic detection: if translation exists, it might be Japanese or Chinese song.
-    // If no explicit language, default to 'ja'. 
-    // We can also try to guess from song title or artist, but let's default to 'ja' unless 'zh' is detected.
-    // Actually, simple heuristic: check if text contains Kana.
     const isJapanese = (text: string) => /[\u3040-\u30ff]/.test(text);
     const lang = lyrics.some(l => isJapanese(l.text)) ? 'ja' : 'zh';
 
     try {
       // Process in chunks to avoid timeout or too large payload
       for (let i = 0; i < lyrics.length; i++) {
-        if (lyrics[i].romaji) continue; // Skip if already has
+        // Check if song switched during long process
+        if (usePlayerStore.getState().currentSong?.id !== currentSongId) {
+          console.log('Song switched during Romaji generation, stopping.');
+          break;
+        }
+
+        if (lyrics[i].romaji) continue; 
         
         try {
            const res = await axios.post('/api/romaji', { text: lyrics[i].text, lang });
            if (res.data.result) {
-             updateLyricRomaji(i, res.data.result);
+             // Re-check just before updating state
+             if (usePlayerStore.getState().currentSong?.id === currentSongId) {
+               updateLyricRomaji(i, res.data.result);
+             }
            }
         } catch (e) {
            console.error("Failed to convert line", i, e);

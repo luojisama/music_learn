@@ -11,6 +11,11 @@ export const musicApi = {
   getSongUrl: async (id: number | string) => {
     return axios.get(`${API_BASE}/song_url/v1`, { params: { id, level: 'standard' } });
   },
+  getVikiSongUrl: async (id: number | string, br?: number) => {
+    const params: any = {};
+    if (br) params.br = br;
+    return axios.get(`https://api.viki.moe/ncm/song/${id}/url`, { params });
+  },
   getLyric: async (id: number | string) => {
     return axios.get(`${API_BASE}/lyric`, { params: { id } });
   },
