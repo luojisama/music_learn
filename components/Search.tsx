@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search as SearchIcon, Play, Heart, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, Play, Heart, Loader2, Download } from 'lucide-react';
 import { musicApi } from '@/lib/api';
 import { usePlayerStore, Song } from '@/store/usePlayerStore';
 import { useLibraryStore } from '@/store/useLibraryStore';
@@ -43,6 +43,37 @@ export default function Search() {
       dt: song.dt ?? song.duration ?? 0,
       url: song.url
     };
+  };
+
+  const [importId, setImportId] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleImportPlaylist = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!importId.trim()) return;
+
+    setIsImporting(true);
+    try {
+      // 支持输入完整的 URL 或 纯 ID
+      const idMatch = importId.match(/id=(\d+)/);
+      const playlistId = idMatch ? idMatch[1] : importId.trim();
+
+      const res = await musicApi.getPlaylistDetail(playlistId);
+      if (res.data.playlist && res.data.playlist.tracks) {
+        const tracks = res.data.playlist.tracks as RawSong[];
+        const normalizedTracks = tracks.map(normalizeSong);
+        setResults(normalizedTracks);
+        setSearchType('song');
+        setImportId(''); // 清空输入
+      } else {
+        alert("未能获取到歌单信息，请检查 ID 是否正确。");
+      }
+    } catch (error) {
+      console.error("Failed to import playlist", error);
+      alert("导入失败，请稍后重试。");
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -191,16 +222,53 @@ export default function Search() {
   return (
     <div className="flex flex-col h-full bg-transparent">
       <div className="p-4 space-y-3">
-        <form onSubmit={handleSearch} className="relative group">
-          <SearchIcon className="absolute left-4 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={searchType === 'song' ? t('placeholder') : '搜索歌单...'}
-            className="w-full pl-12 pr-4 py-2.5 bg-muted/50 backdrop-blur-sm border-2 border-transparent focus:border-primary/50 rounded-2xl focus:outline-none focus:ring-0 text-sm transition-all"
-          />
-        </form>
+        {searchType === 'song' ? (
+          <form onSubmit={handleSearch} className="relative group">
+            <SearchIcon className="absolute left-4 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('placeholder')}
+              className="w-full pl-12 pr-4 py-2.5 bg-muted/50 backdrop-blur-sm border-2 border-transparent focus:border-primary/50 rounded-2xl focus:outline-none focus:ring-0 text-sm transition-all"
+            />
+          </form>
+        ) : (
+          <div className="space-y-3">
+            <form onSubmit={handleSearch} className="relative group">
+              <SearchIcon className="absolute left-4 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="搜索歌单..."
+                className="w-full pl-12 pr-4 py-2.5 bg-muted/50 backdrop-blur-sm border-2 border-transparent focus:border-primary/50 rounded-2xl focus:outline-none focus:ring-0 text-sm transition-all"
+              />
+            </form>
+            
+            <div className="relative group">
+              <form onSubmit={handleImportPlaylist} className="flex gap-2">
+                <div className="relative flex-1">
+                  <Download className="absolute left-4 top-3 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+                  <input
+                    type="text"
+                    value={importId}
+                    onChange={(e) => setImportId(e.target.value)}
+                    placeholder="输入歌单 ID 或链接导入"
+                    className="w-full pl-12 pr-4 py-2.5 bg-muted/50 backdrop-blur-sm border-2 border-transparent focus:border-primary/50 rounded-2xl focus:outline-none focus:ring-0 text-sm transition-all"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isImporting || !importId.trim()}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-2xl text-xs font-medium hover:brightness-110 transition-all disabled:opacity-50"
+                >
+                  {isImporting ? <Loader2 className="animate-spin" size={16} /> : "导入"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 p-1 bg-muted/30 rounded-xl">
           <button
