@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
+// 强制引入依赖，确保 Vercel 将它们打包到 Serverless 函数中
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _forceDeps = [
+  require('xml2js'),
+  require('crypto-js'),
+  require('music-metadata'),
+  require('node-forge'),
+  require('pac-proxy-agent'),
+  require('tunnel'),
+  require('yargs'),
+  require('express'),
+  require('express-fileupload')
+];
+
 // Use require to avoid issues with NeteaseCloudMusicApi in serverless environments
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const NeteaseCloudMusicApi = require('NeteaseCloudMusicApi');
