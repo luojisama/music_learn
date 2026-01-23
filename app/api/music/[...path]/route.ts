@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as NeteaseCloudMusicApi from 'NeteaseCloudMusicApi';
+
+export const runtime = 'nodejs';
+
+// Use require to avoid issues with NeteaseCloudMusicApi in serverless environments
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const NeteaseCloudMusicApi = require('NeteaseCloudMusicApi');
 
 interface QueryParams {
   cookie?: string;
@@ -23,12 +28,25 @@ export async function POST(
 async function handler(req: NextRequest, params: { path: string[] }) {
   const { path } = params;
   // Convert path array to snake_case method name
-  // e.g., /api/music/search -> search
-  // e.g., /api/music/song/url -> song_url
   const endpoint = path.join('_');
 
-  if (!NeteaseCloudMusicApi[endpoint]) {
-    return NextResponse.json({ code: 404, msg: 'Endpoint not found' }, { status: 404 });
+  // Find the method in the API object
+  // Sometimes methods are nested or named differently in the package
+  let method = NeteaseCloudMusicApi[endpoint];
+  
+  // Special case for some common endpoints that might be nested
+  if (!method) {
+    // Try to find the method in a case-insensitive way or with other patterns
+    const keys = Object.keys(NeteaseCloudMusicApi);
+    const foundKey = keys.find(k => k.toLowerCase() === endpoint.toLowerCase());
+    if (foundKey) {
+      method = NeteaseCloudMusicApi[foundKey];
+    }
+  }
+
+  if (typeof method !== 'function') {
+    console.error(`Endpoint not found: ${endpoint}`);
+    return NextResponse.json({ code: 404, msg: `Endpoint ${endpoint} not found` }, { status: 404 });
   }
 
   // Parse Query Parameters
@@ -44,27 +62,20 @@ async function handler(req: NextRequest, params: { path: string[] }) {
       const body = await req.json();
       Object.assign(query, body);
     } catch {
-      // Ignore JSON parse error if body is empty
+      // Ignore JSON parse error
     }
   }
 
   // Handle Cookie
-  // Check if cookie is passed in query or request headers
   const cookie = query.cookie || req.cookies.get('MUSIC_U')?.value || '';
-  // If user passed a cookie in the header 'Cookie', we might want to use it
-  // But NeteaseCloudMusicApi expects it in the query object usually.
-
   query.cookie = cookie;
 
   try {
-    const result = await NeteaseCloudMusicApi[endpoint](query);
+    const result = await method(query);
     
-    // Create Response
     const response = NextResponse.json(result.body, { status: result.status });
 
-    // Handle Set-Cookie if present in the result
     if (result.cookie) {
-       // result.cookie is usually an array of strings
        if (Array.isArray(result.cookie)) {
          result.cookie.forEach((c: string) => {
            response.headers.append('Set-Cookie', c);
@@ -73,11 +84,10 @@ async function handler(req: NextRequest, params: { path: string[] }) {
     }
 
     return response;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal Server Error';
-    return NextResponse.json(
-      { code: 500, msg: message, error },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    console.error(`API Error for ${endpoint}:`, error);
+    const status = error?.status || 500;
+    const body = error?.body || { code: status, msg: error?.message || 'Internal Server Error' };
+    return NextResponse.json(body, { status });
   }
 }

@@ -18,7 +18,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   
   const { setSong, setLyrics } = usePlayerStore();
-  const { addToHistory, addToFavorites, favorites, removeFromFavorites } = useLibraryStore();
+  const { addToHistory, addToFavorites, favorites, removeFromFavorites, searchHistory, addToSearchHistory, clearSearchHistory } = useLibraryStore();
   const t = useTranslations('Search');
 
   const getCoverUrl = (song: Song) => {
@@ -80,6 +80,7 @@ export default function Search() {
     e.preventDefault();
     if (!query.trim()) return;
 
+    addToSearchHistory(query);
     setLoading(true);
     setResults([]);
     setPlaylists([]);
@@ -290,6 +291,36 @@ export default function Search() {
             歌单
           </button>
         </div>
+
+        {searchHistory.length > 0 && !loading && results.length === 0 && playlists.length === 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">最近搜索</span>
+              <button 
+                onClick={clearSearchHistory}
+                className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+              >
+                清空
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {searchHistory.map((h, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setQuery(h);
+                    // Trigger search manually since we can't easily trigger form submit
+                    const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+                    handleSearch(fakeEvent);
+                  }}
+                  className="px-3 py-1 bg-muted/40 hover:bg-muted/60 text-xs rounded-full transition-all"
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
