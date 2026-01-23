@@ -90,9 +90,14 @@ async function handler(req: NextRequest, params: { path: string[] }) {
     }
   }
 
-  // Handle Cookie
+  // Handle Cookie and realIP
   const cookie = query.cookie || req.cookies.get('MUSIC_U')?.value || '';
   query.cookie = cookie;
+  
+  // 注入中国区 IP，防止 Vercel 海外服务器被网易云版权屏蔽或搜索结果差异
+  if (!query.realIP) {
+    query.realIP = '116.25.146.177'; 
+  }
 
   try {
     const result = await method(query);

@@ -91,11 +91,23 @@ export default function Search() {
 
     try {
       const type = searchType === 'song' ? 1 : 1000;
-      const res = await musicApi.search(finalQuery, type);
+      let res = await musicApi.search(finalQuery, type);
       
+      let songs = res.data.result?.songs || res.data.songs || [];
+      
+      // 如果搜索结果较少且是歌曲搜索，尝试去掉括号内容进行二次搜索
+      if (searchType === 'song' && songs.length < 5 && finalQuery.includes('(')) {
+        const fuzzyQuery = finalQuery.replace(/\(.*\)/g, '').trim();
+        if (fuzzyQuery && fuzzyQuery !== finalQuery) {
+          const res2 = await musicApi.search(fuzzyQuery, type);
+          const songs2 = res2.data.result?.songs || res2.data.songs || [];
+          // 合并结果并去重
+          const existingIds = new Set(songs.map((s: any) => s.id));
+          songs = [...songs, ...songs2.filter((s: any) => !existingIds.has(s.id))];
+        }
+      }
+
       if (searchType === 'song') {
-        // 兼容 search 和 cloudsearch 的返回结构
-        const songs = res.data.result?.songs || res.data.songs || [];
         if (songs && songs.length > 0) {
             const rawSongs = songs as RawSong[];
             let normalizedResults = rawSongs.map(normalizeSong);
