@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 const _forceDeps = [
   require('xml2js'),
   require('crypto-js'),
-  require('music-metadata'),
+  // require('music-metadata'), // 这是一个 ESM 模块，不能被 require
   require('node-forge'),
   require('pac-proxy-agent'),
   require('tunnel'),
