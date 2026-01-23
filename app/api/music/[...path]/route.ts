@@ -7,13 +7,16 @@ export const runtime = 'nodejs';
 const _forceDeps = [
   require('xml2js'),
   require('crypto-js'),
-  // require('music-metadata'), // 这是一个 ESM 模块，不能被 require
+  require('music-metadata'),
   require('node-forge'),
   require('pac-proxy-agent'),
   require('tunnel'),
   require('yargs'),
   require('express'),
-  require('express-fileupload')
+  require('express-fileupload'),
+  require('qrcode'),
+  require('md5'),
+  require('safe-decode-uri-component')
 ];
 
 // Use require to avoid issues with NeteaseCloudMusicApi in serverless environments
