@@ -97,9 +97,31 @@ export default function Search() {
         // 兼容 search 和 cloudsearch 的返回结构
         const songs = res.data.result?.songs || res.data.songs || [];
         if (songs && songs.length > 0) {
-          const rawSongs = songs as RawSong[];
-          const normalizedResults = rawSongs.map(normalizeSong);
-          const missingCoverIds = normalizedResults
+            const rawSongs = songs as RawSong[];
+            let normalizedResults = rawSongs.map(normalizeSong);
+            
+            // 结果排序逻辑优化：优先匹配原唱和完全匹配名称的歌曲
+            normalizedResults = normalizedResults.sort((a, b) => {
+              const aName = a.name.toLowerCase();
+              const bName = b.name.toLowerCase();
+              const k = finalQuery.toLowerCase();
+              
+              // 完全匹配关键词
+              const aExact = aName === k;
+              const bExact = bName === k;
+              if (aExact && !bExact) return -1;
+              if (!aExact && bExact) return 1;
+              
+              // 包含关键词且不含 "(Instrumental)" 或 "伴奏"
+              const aIsInst = aName.includes('instrumental') || aName.includes('伴奏');
+              const bIsInst = bName.includes('instrumental') || bName.includes('伴奏');
+              if (!aIsInst && bIsInst) return -1;
+              if (aIsInst && !bIsInst) return 1;
+              
+              return 0;
+            });
+
+            const missingCoverIds = normalizedResults
             .filter((song) => !getCoverUrl(song) && song.id)
             .map((song) => song.id);
 

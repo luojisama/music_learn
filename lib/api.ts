@@ -4,9 +4,16 @@ const API_BASE = '/api/music';
 
 export const musicApi = {
   search: async (keywords: string, type = 1) => {
-    // 歌曲搜索优先使用 cloudsearch，歌单搜索使用 search
+    // 歌曲搜索使用 cloudsearch (更智能，结果更全)，歌单搜索使用 search
     const endpoint = type === 1 ? 'cloudsearch' : 'search';
-    return axios.get(`${API_BASE}/${endpoint}`, { params: { keywords, type } });
+    return axios.get(`${API_BASE}/${endpoint}`, { 
+      params: { 
+        keywords, 
+        type,
+        limit: 30, // 增加返回数量，确保包含更多候选歌曲
+        offset: 0
+      } 
+    });
   },
   getSongUrl: async (id: number | string) => {
     return axios.get(`${API_BASE}/song_url/v1`, { params: { id, level: 'standard' } });
