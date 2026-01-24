@@ -108,13 +108,18 @@ export async function POST(req: NextRequest) {
     };
 
     // Save to GitHub if configured
-    if (GITHUB_TOKEN && GITHUB_REPO && sha) {
-      const success = await fetchGitHub('PUT', {
+    if (GITHUB_TOKEN && GITHUB_REPO) {
+      const body: any = {
         message: `chore: update correction for song ${songId}`,
         content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
-        sha,
         branch: GITHUB_BRANCH
-      });
+      };
+      
+      if (sha) {
+        body.sha = sha;
+      }
+
+      const success = await fetchGitHub('PUT', body);
       if (!success) {
         throw new Error('GitHub sync failed');
       }
