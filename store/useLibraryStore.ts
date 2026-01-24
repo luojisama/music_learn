@@ -21,7 +21,7 @@ interface LibraryState {
   addToSearchHistory: (query: string) => void;
   clearHistory: () => void;
   clearSearchHistory: () => void;
-  saveCorrection: (songId: number, lyrics: LyricLine[]) => Promise<{ success: boolean; error?: string }>;
+  saveCorrection: (songId: number, lyrics: LyricLine[]) => Promise<{ success: boolean; error?: string; details?: string }>;
   getCorrection: (songId: number) => SongCorrection | null;
   syncCorrections: () => Promise<void>;
 }
@@ -77,7 +77,8 @@ export const useLibraryStore = create<LibraryState>()(
           console.error('Failed to sync correction to backend', e);
           return { 
             success: false, 
-            error: e.response?.data?.error || e.message || 'Unknown error' 
+            error: e.response?.data?.error || e.message || 'Unknown error',
+            details: e.response?.data?.details
           };
         }
       },

@@ -4,7 +4,9 @@ import path from 'path';
 
 const DATA_FILE = path.join(process.cwd(), 'data', 'corrections.json');
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN?.trim();
-const GITHUB_REPO = process.env.GITHUB_REPO?.trim().replace(/^https:\/\/github\.com\//, '');
+const GITHUB_REPO = process.env.GITHUB_REPO?.trim()
+  .replace(/^https?:\/\/github\.com\//, '') // Remove https://github.com/
+  .replace(/\/$/, ''); // Remove trailing slash
 const GITHUB_BRANCH = process.env.GITHUB_BRANCH?.trim() || 'main';
 const GITHUB_PATH = 'data/corrections.json';
 
@@ -63,7 +65,8 @@ async function fetchGitHub(method: string, body?: any): Promise<any> {
       if (!res.ok) {
         const errText = await res.text();
         console.error(`[GitHub GET Error] ${res.status} on ${fetchUrl}: ${errText}`);
-        return null;
+        // Instead of returning null, return the error message for better diagnostics
+        throw new Error(`GitHub GET 失败 (${res.status}): ${errText}`);
       }
       
       const json = await res.json();
@@ -129,17 +132,30 @@ export async function POST(req: NextRequest) {
     const githubConfigured = !!(GITHUB_TOKEN && GITHUB_REPO);
 
     if (githubConfigured) {
-      const githubData = await fetchGitHub('GET');
-      if (githubData) {
-        data = githubData.content;
-        sha = githubData.sha;
-      } else {
+      try {
+        const githubData = await fetchGitHub('GET');
+        if (githubData) {
+          data = githubData.content;
+          sha = githubData.sha;
+        }
+      } catch (e: any) {
         return NextResponse.json({ 
-          error: 'GitHub sync connection failed. Check Vercel logs for [GitHub GET Error].' 
+          success: false,
+          error: 'GitHub 连接失败',
+          details: e.message || '无法从 GitHub 获取当前数据，请检查 Token 权限及仓库设置。'
         }, { status: 503 });
       }
     } else {
-      data = readLocal();
+      // Diagnostic: Why is GitHub not configured?
+      const missing = [];
+      if (!GITHUB_TOKEN) missing.push('GITHUB_TOKEN');
+      if (!GITHUB_REPO) missing.push('GITHUB_REPO');
+      
+      return NextResponse.json({ 
+        success: false,
+        error: 'GitHub 同步未配置',
+        details: `缺少环境变量: ${missing.join(', ')}。请在 Vercel 中设置这些变量。`
+      }, { status: 400 });
     }
 
     // Update the specific song's correction

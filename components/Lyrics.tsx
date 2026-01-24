@@ -33,8 +33,10 @@ export default function Lyrics() {
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 2000);
       } else {
-        setSaveError(result.error || "保存失败");
-        setTimeout(() => setSaveError(null), 5000);
+        // Show more detailed error if available
+        const errorMsg = result.details ? `${result.error}: ${result.details}` : (result.error || "保存失败");
+        setSaveError(errorMsg);
+        setTimeout(() => setSaveError(null), 8000); // Longer timeout for detailed errors
       }
     }
   };
