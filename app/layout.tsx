@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sing to Learn Japanese",
+  title: "shiroの唱歌学日语",
   description: "Learn Japanese through singing",
   icons: {
     icon: "https://blog.shiro.team/avatar.png",

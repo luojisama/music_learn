@@ -39,7 +39,7 @@ export default function Sidebar() {
         {/* Header with Tools */}
         <div className="flex items-center justify-between p-6 pb-4">
            <h1 className="font-bold text-2xl tracking-tight text-foreground">
-             Sing & Learn
+             shiroの唱歌学日语
            </h1>
            <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-full">
              <LanguageSwitcher />
