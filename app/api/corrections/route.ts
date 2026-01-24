@@ -25,7 +25,9 @@ function writeLocal(data: any) {
 }
 
 // Helper for GitHub API
-async function fetchGitHub(method: string, body?: any) {
+async function fetchGitHub(method: 'GET'): Promise<{ content: any; sha: string } | null>;
+async function fetchGitHub(method: 'PUT', body: any): Promise<boolean>;
+async function fetchGitHub(method: string, body?: any): Promise<any> {
   if (!GITHUB_TOKEN || !GITHUB_REPO) return null;
 
   const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}?ref=${GITHUB_BRANCH}`;
@@ -37,7 +39,7 @@ async function fetchGitHub(method: string, body?: any) {
   };
 
   if (method === 'GET') {
-    const res = await fetch(url, { headers, next: { revalidate: 0 } });
+    const res = await fetch(url, { headers, cache: 'no-store' });
     if (!res.ok) return null;
     const json = await res.json();
     const content = Buffer.from(json.content, 'base64').toString('utf-8');
