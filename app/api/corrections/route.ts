@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 
 const DATA_FILE = path.join(process.cwd(), 'data', 'corrections.json');
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO; // e.g. "username/repo"
-const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN?.trim();
+const GITHUB_REPO = process.env.GITHUB_REPO?.trim().replace(/^https:\/\/github\.com\//, '');
+const GITHUB_BRANCH = process.env.GITHUB_BRANCH?.trim() || 'main';
 const GITHUB_PATH = 'data/corrections.json';
 
 // Helper for local file system
@@ -29,7 +29,16 @@ async function fetchGitHub(method: 'GET'): Promise<{ content: any; sha: string; 
 async function fetchGitHub(method: 'PUT', body: any): Promise<{ success: boolean; error?: string }>;
 async function fetchGitHub(method: string, body?: any): Promise<any> {
   if (!GITHUB_TOKEN || !GITHUB_REPO) {
-    console.warn('[GitHub] Missing GITHUB_TOKEN or GITHUB_REPO');
+    const missing = [];
+    if (!GITHUB_TOKEN) missing.push('GITHUB_TOKEN');
+    if (!GITHUB_REPO) missing.push('GITHUB_REPO');
+    console.warn(`[GitHub] Missing environment variables: ${missing.join(', ')}`);
+    return null;
+  }
+
+  // Ensure repo is owner/repo format
+  if (!GITHUB_REPO.includes('/')) {
+    console.error(`[GitHub] Invalid GITHUB_REPO format: ${GITHUB_REPO}. Expected "owner/repo"`);
     return null;
   }
 
@@ -43,15 +52,17 @@ async function fetchGitHub(method: string, body?: any): Promise<any> {
 
   try {
     if (method === 'GET') {
-      const res = await fetch(`${url}?ref=${GITHUB_BRANCH}`, { headers, cache: 'no-store' });
+      const fetchUrl = `${url}?ref=${GITHUB_BRANCH}`;
+      const res = await fetch(fetchUrl, { headers, cache: 'no-store' });
       
       if (res.status === 404) {
+        console.log(`[GitHub GET] File not found (404), will create new: ${GITHUB_PATH}`);
         return { content: {}, sha: '', exists: false };
       }
       
       if (!res.ok) {
         const errText = await res.text();
-        console.error(`[GitHub GET Error] ${res.status}: ${errText}`);
+        console.error(`[GitHub GET Error] ${res.status} on ${fetchUrl}: ${errText}`);
         return null;
       }
       
@@ -61,7 +72,7 @@ async function fetchGitHub(method: string, body?: any): Promise<any> {
     }
 
     if (method === 'PUT') {
-      console.log(`[GitHub PUT] Updating ${GITHUB_PATH} on branch ${GITHUB_BRANCH}...`);
+      console.log(`[GitHub PUT] Updating ${GITHUB_PATH} on branch ${GITHUB_BRANCH} in ${GITHUB_REPO}...`);
       const res = await fetch(url, {
         method: 'PUT',
         headers,
@@ -71,14 +82,19 @@ async function fetchGitHub(method: string, body?: any): Promise<any> {
       if (!res.ok) {
         const errText = await res.text();
         console.error(`[GitHub PUT Error] ${res.status}: ${errText}`);
-        return { success: false, error: errText };
+        try {
+          const errJson = JSON.parse(errText);
+          return { success: false, error: errJson.message || errText };
+        } catch {
+          return { success: false, error: errText };
+        }
       }
       
       return { success: true };
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error(`[GitHub API Exception]`, e);
-    return null;
+    return { success: false, error: e.message || 'Network error' };
   }
 
   return null;
@@ -93,8 +109,9 @@ export async function GET() {
       }
     }
     return NextResponse.json(readLocal());
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to read corrections' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[GET /api/corrections] Error:', error);
+    return NextResponse.json({ error: 'Failed to read corrections', details: error.message }, { status: 500 });
   }
 }
 
@@ -109,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     let data: any = {};
     let sha: string | undefined;
-    let githubConfigured = !!(GITHUB_TOKEN && GITHUB_REPO);
+    const githubConfigured = !!(GITHUB_TOKEN && GITHUB_REPO);
 
     if (githubConfigured) {
       const githubData = await fetchGitHub('GET');
@@ -117,8 +134,9 @@ export async function POST(req: NextRequest) {
         data = githubData.content;
         sha = githubData.sha;
       } else {
-        // If GitHub is configured but GET failed (not a 404), stop to prevent data loss
-        return NextResponse.json({ error: 'GitHub sync connection failed' }, { status: 503 });
+        return NextResponse.json({ 
+          error: 'GitHub sync connection failed. Check Vercel logs for [GitHub GET Error].' 
+        }, { status: 503 });
       }
     } else {
       data = readLocal();
@@ -143,10 +161,9 @@ export async function POST(req: NextRequest) {
       }
 
       const result = await fetchGitHub('PUT', body);
-      if (!result.success) {
+      if (!result?.success) {
         return NextResponse.json({ 
-          error: 'GitHub sync failed', 
-          details: result.error 
+          error: `GitHub sync failed: ${result?.error || 'Unknown error'}`
         }, { status: 500 });
       }
     } else {
@@ -154,8 +171,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, correction: data[songId] });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[POST /api/corrections] Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
   }
 }

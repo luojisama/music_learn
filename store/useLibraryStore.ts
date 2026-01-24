@@ -21,7 +21,7 @@ interface LibraryState {
   addToSearchHistory: (query: string) => void;
   clearHistory: () => void;
   clearSearchHistory: () => void;
-  saveCorrection: (songId: number, lyrics: LyricLine[]) => void;
+  saveCorrection: (songId: number, lyrics: LyricLine[]) => Promise<{ success: boolean; error?: string }>;
   getCorrection: (songId: number) => SongCorrection | null;
   syncCorrections: () => Promise<void>;
 }
@@ -60,19 +60,25 @@ export const useLibraryStore = create<LibraryState>()(
           isCorrected: true
         };
 
-        // Update local state
-        set((state) => ({
-          corrections: {
-            ...state.corrections,
-            [songId]: correction
-          }
-        }));
-
         // Sync to backend
         try {
-          await axios.post('/api/corrections', correction);
-        } catch (e) {
+          const res = await axios.post('/api/corrections', correction);
+          
+          // Only update local state if sync was successful or if not in production
+          // Actually, we want optimistic update but let's at least know if it failed
+          set((state) => ({
+            corrections: {
+              ...state.corrections,
+              [songId]: correction
+            }
+          }));
+          return { success: true };
+        } catch (e: any) {
           console.error('Failed to sync correction to backend', e);
+          return { 
+            success: false, 
+            error: e.response?.data?.error || e.message || 'Unknown error' 
+          };
         }
       },
       getCorrection: (songId) => {

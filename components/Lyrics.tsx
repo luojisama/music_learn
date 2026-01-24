@@ -16,14 +16,26 @@ export default function Lyrics() {
   const t = useTranslations('Lyrics');
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const isCorrected = currentSong ? !!corrections[currentSong.id] : false;
 
-  const handleSaveCorrection = () => {
+  const handleSaveCorrection = async () => {
     if (currentSong && lyrics.length > 0) {
-      saveCorrection(currentSong.id, lyrics);
-      setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 2000);
+      setIsSaving(true);
+      setSaveError(null);
+      
+      const result = await saveCorrection(currentSong.id, lyrics);
+      
+      setIsSaving(false);
+      if (result.success) {
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+      } else {
+        setSaveError(result.error || "保存失败");
+        setTimeout(() => setSaveError(null), 5000);
+      }
     }
   };
 
@@ -84,27 +96,36 @@ export default function Lyrics() {
 
   return (
     <div className="h-full relative mx-4 md:mr-4 md:ml-0 my-4 md:h-[calc(100vh-2rem)] rounded-3xl bg-card/50 backdrop-blur-2xl border border-border/50 shadow-xl overflow-hidden">
-      <div className="absolute top-6 right-6 z-10 flex gap-2">
-        <button
-          onClick={handleSaveCorrection}
-          className={clsx(
-            "backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 text-xs font-bold flex items-center gap-2 transition-all border",
-            isSaved || isCorrected 
-              ? "bg-green-500/20 text-green-500 border-green-500/30" 
-              : "bg-primary/90 text-primary-foreground border-primary/20"
-          )}
-        >
-          {isSaved ? <Check size={14} /> : <Save size={14} />}
-          {isSaved ? "已保存" : isCorrected ? "已修正" : "保存修正"}
-        </button>
-        <button
-          onClick={handleAutoRomaji}
-          disabled={isAutoGenerating}
-          className="bg-card/90 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 text-xs font-bold flex items-center gap-2 transition-all text-primary border border-border/20"
-        >
-          {isAutoGenerating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
-          {t('auto_romaji')}
-        </button>
+      <div className="absolute top-6 right-6 z-10 flex flex-col items-end gap-2">
+        <div className="flex gap-2">
+          <button
+            onClick={handleSaveCorrection}
+            disabled={isSaving}
+            className={clsx(
+              "backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 text-xs font-bold flex items-center gap-2 transition-all border",
+              isSaved || isCorrected 
+                ? "bg-green-500/20 text-green-500 border-green-500/30" 
+                : "bg-primary/90 text-primary-foreground border-primary/20",
+              isSaving && "opacity-70 cursor-wait"
+            )}
+          >
+            {isSaving ? <Loader2 size={14} className="animate-spin" /> : isSaved ? <Check size={14} /> : <Save size={14} />}
+            {isSaving ? "正在同步..." : isSaved ? "已保存" : isCorrected ? "已修正" : "保存修正"}
+          </button>
+          <button
+            onClick={handleAutoRomaji}
+            disabled={isAutoGenerating}
+            className="bg-card/90 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 text-xs font-bold flex items-center gap-2 transition-all text-primary border border-border/20"
+          >
+            {isAutoGenerating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+            {t('auto_romaji')}
+          </button>
+        </div>
+        {saveError && (
+          <div className="bg-red-500/10 text-red-500 text-[10px] px-3 py-1.5 rounded-lg border border-red-500/20 animate-in fade-in slide-in-from-top-2">
+            错误: {saveError}
+          </div>
+        )}
       </div>
 
       <div className="h-full overflow-y-auto p-8 pb-48 scrollbar-hide" ref={containerRef}>
