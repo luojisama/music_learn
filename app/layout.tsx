@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { CorrectionsSync } from "@/components/CorrectionsSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default async function RootLayout({
             defaultTheme="system"
             enableSystem
           >
+            <CorrectionsSync />
             {children}
           </ThemeProvider>
         </NextIntlClientProvider>

@@ -15,11 +15,23 @@ interface LibraryListProps {
 }
 
 export default function LibraryList({ type }: LibraryListProps) {
-  const { favorites, history, removeFromFavorites, addToFavorites, addToHistory } = useLibraryStore();
+  const { favorites, history, removeFromFavorites, addToFavorites, addToHistory, corrections, getCorrection } = useLibraryStore();
   const { setSong, setLyrics } = usePlayerStore();
   const t = useTranslations('Library');
+  const [sortByCorrection, setSortByCorrection] = React.useState(true);
   
-  const songs = type === 'favorites' ? favorites : history;
+  const isCorrected = (songId: number) => !!corrections[songId];
+
+  const rawSongs = type === 'favorites' ? favorites : history;
+  
+  // Sort songs: corrected first if enabled
+  const songs = [...rawSongs].sort((a, b) => {
+    if (sortByCorrection) {
+      if (isCorrected(a.id) && !isCorrected(b.id)) return -1;
+      if (!isCorrected(a.id) && isCorrected(b.id)) return 1;
+    }
+    return 0;
+  });
   const getCoverUrl = (song: Song) => {
     const rawUrl = song.al?.picUrl ?? song.album?.picUrl ?? song.picUrl;
     return rawUrl ? rawUrl.replace(/^http:\/\//, 'https://') : undefined;
@@ -54,10 +66,17 @@ export default function LibraryList({ type }: LibraryListProps) {
         return;
       }
       setSong({ ...normalizedSong, url });
-
-      const lrcRes = await musicApi.getLyric(song.id);
-      const parsedLyrics = parseLrc(lrcRes.data.lrc?.lyric || '', lrcRes.data.tlyric?.lyric || '');
-      setLyrics(parsedLyrics);
+      
+      // Check for local correction first
+      const correction = getCorrection(song.id);
+      if (correction) {
+        setLyrics(correction.lyrics);
+        console.log('Using manually corrected lyrics for', song.id);
+      } else {
+        const lrcRes = await musicApi.getLyric(song.id);
+        const parsedLyrics = parseLrc(lrcRes.data.lrc?.lyric || '', lrcRes.data.tlyric?.lyric || '');
+        setLyrics(parsedLyrics);
+      }
     } catch (error) {
       console.error("Error playing song", error);
     }
@@ -66,8 +85,27 @@ export default function LibraryList({ type }: LibraryListProps) {
   const isFavorite = (id: number) => favorites.some(s => s.id === id);
 
   return (
-    <div className="flex-1 overflow-y-auto p-2">
-      {songs.length === 0 && (
+    <div className="flex-1 flex flex-col min-h-0">
+      {songs.length > 0 && (
+        <div className="px-4 py-2 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+            {songs.length} 首歌曲
+          </span>
+          <button
+            onClick={() => setSortByCorrection(!sortByCorrection)}
+            className={clsx(
+              "text-[10px] px-2 py-1 rounded-md transition-all border",
+              sortByCorrection 
+                ? "bg-primary/10 text-primary border-primary/20 font-bold" 
+                : "bg-muted/50 text-muted-foreground border-transparent"
+            )}
+          >
+            修正优先: {sortByCorrection ? '开启' : '关闭'}
+          </button>
+        </div>
+      )}
+      <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
+        {songs.length === 0 && (
         <div className="text-center text-muted-foreground text-sm mt-8">
           {type === 'favorites' ? t('empty_favorites') : t('empty_history')}
         </div>
@@ -101,8 +139,20 @@ export default function LibraryList({ type }: LibraryListProps) {
               </div>
               
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate text-foreground">{song.name}</div>
+                <div className="flex items-center gap-1.5">
+                  <div className="text-sm font-medium truncate group-hover:text-primary transition-colors text-foreground">{song.name}</div>
+                  {isCorrected(song.id) && (
+                    <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-md border border-primary/20 whitespace-nowrap">
+                      已修正
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs text-muted-foreground truncate">{song.ar?.map(a => a.name).join(', ')}</div>
+                {isCorrected(song.id) && corrections[song.id].lyrics?.[0] && (
+                  <div className="text-[10px] text-primary/60 italic truncate mt-0.5">
+                    修正预览: {corrections[song.id].lyrics.find(l => l.romaji)?.romaji || corrections[song.id].lyrics[0].romaji}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-1">
@@ -138,5 +188,6 @@ export default function LibraryList({ type }: LibraryListProps) {
         })}
       </div>
     </div>
+  </div>
   );
 }

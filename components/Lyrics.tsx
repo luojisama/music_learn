@@ -5,14 +5,27 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 import axios from 'axios';
-import { Loader2, Wand2 } from 'lucide-react';
+import { Loader2, Wand2, Save, Check } from 'lucide-react';
+import { useLibraryStore } from '@/store/useLibraryStore';
 
 export default function Lyrics() {
-  const { lyrics, currentLyricIndex, updateLyricRomaji, requestSeek, isLyricLooping } = usePlayerStore();
+  const { lyrics, currentLyricIndex, updateLyricRomaji, requestSeek, isLyricLooping, currentSong } = usePlayerStore();
+  const { saveCorrection, corrections } = useLibraryStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const activeLineRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('Lyrics');
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const isCorrected = currentSong ? !!corrections[currentSong.id] : false;
+
+  const handleSaveCorrection = () => {
+    if (currentSong && lyrics.length > 0) {
+      saveCorrection(currentSong.id, lyrics);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    }
+  };
 
   useEffect(() => {
     if (activeLineRef.current) {
@@ -71,7 +84,19 @@ export default function Lyrics() {
 
   return (
     <div className="h-full relative mx-4 md:mr-4 md:ml-0 my-4 md:h-[calc(100vh-2rem)] rounded-3xl bg-card/50 backdrop-blur-2xl border border-border/50 shadow-xl overflow-hidden">
-      <div className="absolute top-6 right-6 z-10">
+      <div className="absolute top-6 right-6 z-10 flex gap-2">
+        <button
+          onClick={handleSaveCorrection}
+          className={clsx(
+            "backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 text-xs font-bold flex items-center gap-2 transition-all border",
+            isSaved || isCorrected 
+              ? "bg-green-500/20 text-green-500 border-green-500/30" 
+              : "bg-primary/90 text-primary-foreground border-primary/20"
+          )}
+        >
+          {isSaved ? <Check size={14} /> : <Save size={14} />}
+          {isSaved ? "已保存" : isCorrected ? "已修正" : "保存修正"}
+        </button>
         <button
           onClick={handleAutoRomaji}
           disabled={isAutoGenerating}
@@ -98,53 +123,88 @@ export default function Lyrics() {
                     : "opacity-40 hover:opacity-80 hover:bg-card/20 hover:scale-105"
                 )}
                 onClick={() => {
-                  // Seek to this line
                   requestSeek(line.time);
                 }}
               >
-                {/* Romaji (Editable) */}
-                <input
-                  type="text"
-                  value={line.romaji || ''}
-                  placeholder="Romaji..."
-                  onClick={(e) => e.stopPropagation()} // Prevent seek when editing
-                  onChange={(e) => updateLyricRomaji(index, e.target.value)}
-                  className={clsx(
-                    "text-center bg-transparent border-none focus:ring-0 w-full font-medium tracking-wide outline-none transition-colors",
-                    isActive ? "text-primary text-sm" : "text-muted-foreground text-xs"
-                  )}
-                />
-
-                {/* Original Text */}
-                <p className={clsx(
-                  "font-bold tracking-tight transition-all",
-                  isActive 
-                    ? "text-3xl md:text-4xl bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent drop-shadow-sm" 
-                    : "text-xl text-muted-foreground"
+                {/* Romaji */}
+                <div className="min-h-[1.5rem] flex justify-center">
+                  <RomajiText 
+                    text={line.romaji} 
+                    isActive={isActive} 
+                    onUpdate={(newRomaji) => updateLyricRomaji(index, newRomaji)}
+                  />
+                </div>
+                
+                {/* Main Text */}
+                <div className={clsx(
+                  "text-xl md:text-2xl font-bold tracking-wide",
+                  isActive ? "text-primary" : "text-foreground/80"
                 )}>
                   {line.text}
-                </p>
+                </div>
                 
                 {/* Translation */}
                 {line.translation && (
-                   <p className={clsx(
-                     "font-medium mt-2",
-                     isActive ? "text-lg text-primary/80" : "text-sm text-muted-foreground"
-                   )}>
-                     {line.translation}
-                   </p>
-                 )}
-                
-                {isActive && isLyricLooping && (
-                   <div className="text-xs text-primary font-mono mt-2 bg-primary/10 px-2 py-1 rounded-full inline-block">
-                      {t('loop_line')}
-                   </div>
+                  <div className={clsx(
+                    "text-sm md:text-base font-medium opacity-60",
+                    isActive ? "text-primary/80" : "text-foreground/60"
+                  )}>
+                    {line.translation}
+                  </div>
                 )}
               </div>
             );
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+function RomajiText({ text, isActive, onUpdate }: { text?: string, isActive: boolean, onUpdate: (val: string) => void }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(text || '');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setValue(text || '');
+  }, [text]);
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        autoFocus
+        className="bg-muted/50 border-b border-primary text-center text-sm w-full outline-none py-1 rounded-t-md"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={() => {
+          setIsEditing(false);
+          onUpdate(value);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            setIsEditing(false);
+            onUpdate(value);
+          }
+        }}
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
+  }
+
+  return (
+    <div 
+      className={clsx(
+        "text-xs md:text-sm font-medium tracking-wider cursor-text hover:text-primary transition-colors",
+        isActive ? "text-primary/70" : "text-foreground/40"
+      )}
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsEditing(true);
+      }}
+    >
+      {text || (isActive ? '点击添加罗马音...' : '')}
     </div>
   );
 }

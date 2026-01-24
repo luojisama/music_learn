@@ -1,25 +1,38 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Song } from './usePlayerStore';
+import { Song, LyricLine } from './usePlayerStore';
+import axios from 'axios';
+
+export interface SongCorrection {
+  songId: number;
+  lyrics: LyricLine[];
+  updatedAt: number;
+  isCorrected: boolean;
+}
 
 interface LibraryState {
   favorites: Song[];
   history: Song[];
   searchHistory: string[];
+  corrections: Record<number, SongCorrection>; // Keyed by songId
   addToFavorites: (song: Song) => void;
   removeFromFavorites: (id: number) => void;
   addToHistory: (song: Song) => void;
   addToSearchHistory: (query: string) => void;
   clearHistory: () => void;
   clearSearchHistory: () => void;
+  saveCorrection: (songId: number, lyrics: LyricLine[]) => void;
+  getCorrection: (songId: number) => SongCorrection | null;
+  syncCorrections: () => Promise<void>;
 }
 
 export const useLibraryStore = create<LibraryState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       favorites: [],
       history: [],
       searchHistory: [],
+      corrections: {},
       addToFavorites: (song) => set((state) => {
         if (state.favorites.some(s => s.id === song.id)) return state;
         return { favorites: [...state.favorites, song] };
@@ -39,6 +52,43 @@ export const useLibraryStore = create<LibraryState>()(
       }),
       clearHistory: () => set({ history: [] }),
       clearSearchHistory: () => set({ searchHistory: [] }),
+      saveCorrection: async (songId, lyrics) => {
+        const correction: SongCorrection = {
+          songId,
+          lyrics,
+          updatedAt: Date.now(),
+          isCorrected: true
+        };
+
+        // Update local state
+        set((state) => ({
+          corrections: {
+            ...state.corrections,
+            [songId]: correction
+          }
+        }));
+
+        // Sync to backend
+        try {
+          await axios.post('/api/corrections', correction);
+        } catch (e) {
+          console.error('Failed to sync correction to backend', e);
+        }
+      },
+      getCorrection: (songId) => {
+        const state = get();
+        return state.corrections[songId] || null;
+      },
+      syncCorrections: async () => {
+        try {
+          const res = await axios.get('/api/corrections');
+          if (res.data) {
+            set({ corrections: res.data });
+          }
+        } catch (e) {
+          console.error('Failed to sync corrections from backend', e);
+        }
+      },
     }),
     {
       name: 'music-library-storage',

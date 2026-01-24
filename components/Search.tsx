@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search as SearchIcon, Play, Heart, Loader2, Download } from 'lucide-react';
+import { Search as SearchIcon, Play, Heart, Loader2, Download, CheckCircle2 } from 'lucide-react';
 import { musicApi } from '@/lib/api';
 import { usePlayerStore, Song } from '@/store/usePlayerStore';
 import { useLibraryStore } from '@/store/useLibraryStore';
@@ -16,10 +16,13 @@ export default function Search() {
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [searchType, setSearchType] = useState<'song' | 'playlist'>('song');
   const [loading, setLoading] = useState(false);
+  const [sortByCorrection, setSortByCorrection] = useState(true);
   
   const { setSong, setLyrics } = usePlayerStore();
-  const { addToHistory, addToFavorites, favorites, removeFromFavorites, searchHistory, addToSearchHistory, clearSearchHistory } = useLibraryStore();
+  const { addToHistory, addToFavorites, favorites, removeFromFavorites, searchHistory, addToSearchHistory, clearSearchHistory, corrections, getCorrection } = useLibraryStore();
   const t = useTranslations('Search');
+
+  const isCorrected = (songId: number) => !!corrections[songId];
 
   const getCoverUrl = (song: Song) => {
     const rawUrl = song.al?.picUrl ?? song.album?.picUrl ?? song.picUrl;
@@ -155,11 +158,17 @@ export default function Search() {
               if (bName.includes('instrumental') || bName.includes('伴奏')) bScore -= 100;
 
               // 4. 完全匹配微加分 (不再作为决定性因素)
-              if (aName === k) aScore += 20;
-              if (bName === k) bScore += 20;
+          if (aName === k) aScore += 20;
+          if (bName === k) bScore += 20;
 
-              return bScore - aScore; // 分数高的排前面
-            });
+          // 5. 人工修正权重极大加分 (优先显示)
+          if (sortByCorrection) {
+            if (isCorrected(a.id)) aScore += 1000;
+            if (isCorrected(b.id)) bScore += 1000;
+          }
+
+          return bScore - aScore; // 分数高的排前面
+        });
 
             const missingCoverIds = normalizedResults
             .filter((song) => !getCoverUrl(song) && song.id)
@@ -288,19 +297,26 @@ export default function Search() {
       setSong({ ...finalSong, url });
 
       // 2. Get Lyrics
-      const lrcRes = await musicApi.getLyric(songId);
-      
-      // Final check before setting lyrics
-      const currentIdAfterLrc = usePlayerStore.getState().currentSong?.id;
-      if (currentIdAfterLrc !== songId) {
-        console.log('Song switched during Lyric fetch, ignoring results for', songId);
-        return;
-      }
+      // Check for local correction first
+      const correction = getCorrection(songId);
+      if (correction) {
+        setLyrics(correction.lyrics);
+        console.log('Using manually corrected lyrics for', songId);
+      } else {
+        const lrcRes = await musicApi.getLyric(songId);
+        
+        // Final check before setting lyrics
+        const currentIdAfterLrc = usePlayerStore.getState().currentSong?.id;
+        if (currentIdAfterLrc !== songId) {
+          console.log('Song switched during Lyric fetch, ignoring results for', songId);
+          return;
+        }
 
-      const lrc = lrcRes.data.lrc?.lyric || '';
-      const tlyric = lrcRes.data.tlyric?.lyric || '';
-      const parsedLyrics = parseLrc(lrc, tlyric);
-      setLyrics(parsedLyrics);
+        const lrc = lrcRes.data.lrc?.lyric || '';
+        const tlyric = lrcRes.data.tlyric?.lyric || '';
+        const parsedLyrics = parseLrc(lrc, tlyric);
+        setLyrics(parsedLyrics);
+      }
     } catch (error) {
       console.error('Play song failed', error);
     }
@@ -401,6 +417,46 @@ export default function Search() {
           </button>
         </div>
 
+        {searchType === 'song' && results.length > 0 && (
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              {results.length} 首歌曲
+            </span>
+            <button
+              onClick={() => {
+                setSortByCorrection(!sortByCorrection);
+                // Trigger re-sort of existing results
+                const sorted = [...results].sort((a, b) => {
+                  // Re-calculate scores or just a simple correction-based sort
+                  if (!sortByCorrection) {
+                    if (isCorrected(a.id) && !isCorrected(b.id)) return -1;
+                    if (!isCorrected(a.id) && isCorrected(b.id)) return 1;
+                    return 0;
+                  } else {
+                    // When turning OFF correction sort, we'd ideally want to revert to original order
+                    // but since we don't store it, we'll just leave it or use a simpler criteria
+                    return 0; 
+                  }
+                });
+                if (!sortByCorrection) {
+                  setResults(sorted);
+                } else {
+                  // If turning off, maybe re-trigger search or just leave it
+                  handleSearch();
+                }
+              }}
+              className={clsx(
+                "text-[10px] px-2 py-1 rounded-md transition-all border",
+                sortByCorrection 
+                  ? "bg-primary/10 text-primary border-primary/20 font-bold" 
+                  : "bg-muted/50 text-muted-foreground border-transparent"
+              )}
+            >
+              修正优先: {sortByCorrection ? '开启' : '关闭'}
+            </button>
+          </div>
+        )}
+
         {searchHistory.length > 0 && !loading && results.length === 0 && playlists.length === 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between px-1">
@@ -466,10 +522,22 @@ export default function Search() {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{song.name}</div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-sm font-medium truncate group-hover:text-primary transition-colors">{song.name}</div>
+                        {isCorrected(song.id) && (
+                          <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-md border border-primary/20 whitespace-nowrap">
+                            已修正
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-muted-foreground truncate">
                         {song.ar.map(a => a.name).join(', ')}
                       </div>
+                      {isCorrected(song.id) && corrections[song.id].lyrics?.[0] && (
+                        <div className="text-[10px] text-primary/60 italic truncate mt-0.5">
+                          修正预览: {corrections[song.id].lyrics.find(l => l.romaji)?.romaji || corrections[song.id].lyrics[0].romaji}
+                        </div>
+                      )}
                     </div>
 
                     <button
