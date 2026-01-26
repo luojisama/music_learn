@@ -70,8 +70,20 @@ async function fetchGitHub(method: string, body?: any): Promise<any> {
       }
       
       const json = await res.json();
-      const content = Buffer.from(json.content, 'base64').toString('utf-8');
-      return { content: JSON.parse(content), sha: json.sha, exists: true };
+      
+      // Handle case where file is too large (>1MB) and content is missing
+      if (!json.content && json.size > 0) {
+        console.warn(`[GitHub GET] File content missing (likely >1MB). Size: ${json.size}`);
+        // In this case, we can't easily append to it without using Git Data API.
+        // For now, we return empty content to prevent crash, but this means we might overwrite data if we proceed to PUT.
+        // Safer to throw error.
+        throw new Error(`GitHub 文件过大 (${json.size} bytes)，暂不支持直接同步。请手动维护。`);
+      }
+
+      const content = Buffer.from(json.content || '', 'base64').toString('utf-8');
+      // Handle empty file case
+      const parsedContent = content ? JSON.parse(content) : {};
+      return { content: parsedContent, sha: json.sha, exists: true };
     }
 
     if (method === 'PUT') {

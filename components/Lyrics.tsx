@@ -29,14 +29,14 @@ export default function Lyrics() {
       const result = await saveCorrection(currentSong.id, lyrics);
       
       setIsSaving(false);
-      if (result.success) {
+      if (result.synced) {
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 2000);
       } else {
-        // Show more detailed error if available
-        const errorMsg = result.details ? `${result.error}: ${result.details}` : (result.error || "保存失败");
-        setSaveError(errorMsg);
-        setTimeout(() => setSaveError(null), 8000); // Longer timeout for detailed errors
+        // Optimistic update succeeded (local), but sync failed
+        const errorMsg = result.details ? `${result.error}: ${result.details}` : (result.error || "同步失败");
+        setSaveError(`已保存到本地，但同步失败: ${errorMsg}`);
+        setTimeout(() => setSaveError(null), 8000); 
       }
     }
   };
