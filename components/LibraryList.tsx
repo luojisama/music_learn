@@ -3,10 +3,9 @@
 import React from 'react';
 import Image from 'next/image';
 import { Play, Heart, Trash2 } from 'lucide-react';
-import { usePlayerStore, Song } from '@/store/usePlayerStore';
+import { usePlaySong } from '@/hooks/usePlaySong';
 import { useLibraryStore } from '@/store/useLibraryStore';
-import { musicApi } from '@/lib/api';
-import { parseLrc } from '@/lib/lrcParser';
+import { Song } from '@/store/usePlayerStore';
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 
@@ -15,8 +14,8 @@ interface LibraryListProps {
 }
 
 export default function LibraryList({ type }: LibraryListProps) {
-  const { favorites, history, removeFromFavorites, addToFavorites, addToHistory, corrections, getCorrection } = useLibraryStore();
-  const { setSong, setLyrics } = usePlayerStore();
+  const { favorites, history, removeFromFavorites, addToFavorites, corrections } = useLibraryStore();
+  const { playSong } = usePlaySong();
   const t = useTranslations('Library');
   const [sortByCorrection, setSortByCorrection] = React.useState(true);
   
@@ -50,36 +49,6 @@ export default function LibraryList({ type }: LibraryListProps) {
       dt: song.dt ?? song.duration ?? 0,
       url: song.url
     };
-  };
-
-  const playSong = async (song: Song) => {
-    const normalizedSong = normalizeSong(song);
-
-    setSong(normalizedSong);
-    addToHistory(normalizedSong);
-
-    try {
-      const urlRes = await musicApi.getSongUrl(song.id);
-      const url = urlRes.data.data[0]?.url;
-      if (!url) {
-        alert("Cannot play this song");
-        return;
-      }
-      setSong({ ...normalizedSong, url });
-      
-      // Check for local correction first
-      const correction = getCorrection(song.id);
-      if (correction) {
-        setLyrics(correction.lyrics);
-        console.log('Using manually corrected lyrics for', song.id);
-      } else {
-        const lrcRes = await musicApi.getLyric(song.id);
-        const parsedLyrics = parseLrc(lrcRes.data.lrc?.lyric || '', lrcRes.data.tlyric?.lyric || '');
-        setLyrics(parsedLyrics);
-      }
-    } catch (error) {
-      console.error("Error playing song", error);
-    }
   };
 
   const isFavorite = (id: number) => favorites.some(s => s.id === id);
@@ -117,7 +86,7 @@ export default function LibraryList({ type }: LibraryListProps) {
           return (
             <div
               key={`${type}-${song.id}`}
-              onClick={() => playSong(song)}
+              onClick={() => playSong(normalizeSong(song))}
               className="group flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
             >
               <div className="relative w-10 h-10 flex-shrink-0">
