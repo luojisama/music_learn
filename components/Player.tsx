@@ -147,7 +147,7 @@ export default function Player() {
   const coverUrl = rawCoverUrl?.replace(/^http:\/\//, 'https://');
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl bg-card/90 backdrop-blur-2xl border border-border/50 p-4 shadow-2xl z-50 transition-all rounded-[2rem]">
+    <div className="fixed bottom-4 left-4 right-4 md:bottom-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[90%] md:max-w-4xl bg-card/90 backdrop-blur-2xl border border-border/50 p-4 shadow-2xl z-50 transition-all rounded-[2rem]">
       <audio
         ref={audioRef}
         src={currentSong.url}

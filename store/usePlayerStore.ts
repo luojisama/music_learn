@@ -62,7 +62,14 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   seekTime: null,
 
   setPlaying: (playing) => set({ isPlaying: playing }),
-  setSong: (song) => set({ currentSong: song, isPlaying: true, currentTime: 0, isLyricLooping: false, seekTime: 0 }),
+  setSong: (song) => set({ 
+    currentSong: song, 
+    isPlaying: true, 
+    currentTime: 0, 
+    isLyricLooping: false, 
+    seekTime: 0,
+    duration: song.dt ? song.dt / 1000 : 0 
+  }),
   setPlaybackRate: (rate) => set({ playbackRate: rate }),
   setLoopMode: (mode) => set({ loopMode: mode }),
   setVolume: (volume) => set({ volume }),
