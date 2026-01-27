@@ -24,13 +24,13 @@
         "time": 20.146,
         "text": "もうすぐ時計は6時",
         "translation": "时钟快要走到六点",
-        "romaji": "mōsugu tokei wa roku ji"
+        "romaji": "mosugu tokei wa roku ji"
       },
       {
         "time": 24.208,
         "text": "もうそこに一番星",
         "translation": "夜空已然出现了第一颗星",
-        "romaji": "mō soko ni ichiban boshi"
+        "romaji": "mo soko ni ichiban boshi"
       },
       {
         "time": 27.607,
@@ -54,7 +54,7 @@
         "time": 43.067,
         "text": "何億光年 離れたところからあんなに輝く",
         "translation": "从相距几亿光年的地方 散发出那样的光芒",
-        "romaji": "nan okuko onen    hanare ta tokoro kara annani kagayaku"
+        "romaji": "nan oku konen   hanare ta tokoro kara annani kagayaku"
       },
       {
         "time": 53.144,
@@ -66,7 +66,7 @@
         "time": 61.026,
         "text": "「いいや 僕は ずっと一人きりさ」",
         "translation": "「并不是啊 我一直都孤身一人啊」",
-        "romaji": "\" ii ya   boku wa   zutto hitori kiri sa \""
+        "romaji": "\" ii ya   boku wa   zutto ichi nin giri sa \""
       },
       {
         "time": 68.275,
@@ -96,7 +96,7 @@
         "time": 87.852,
         "text": "空見上げて 指を差されるような",
         "translation": "想化作他人仰望星空 所指向的那个星座",
-        "romaji": "sora miage te   yubi o sasa reru yō na"
+        "romaji": "sora miage te   yubi o sasa reru yo na"
       },
       {
         "time": 92.673,
@@ -114,7 +114,7 @@
         "time": 107.939,
         "text": "もうすぐ時計は8時",
         "translation": "时钟快要走到八点",
-        "romaji": "mōsugu tokei wa hachi ji"
+        "romaji": "mosugu tokei wa hachi ji"
       },
       {
         "time": 111.938,
@@ -126,13 +126,13 @@
         "time": 115.23,
         "text": "何億光年 離れたところにはもうないかもしれない",
         "translation": "可能和我们已然不是相距几亿光年了",
-        "romaji": "nan oku kōnen   hanare ta tokoro ni wa mō nai kamo shire nai"
+        "romaji": "nan oku kōnen   hanare ta tokoro ni wa mo nai kamo shire nai"
       },
       {
         "time": 125.321,
         "text": "月が綺麗で 泣きそうになるのは",
         "translation": "月色真美 令我泫然欲泣",
-        "romaji": "tsuki ga kirei de   naki sō ni naru no wa"
+        "romaji": "tsuki ga kirei de   naki so ni naru no wa"
       },
       {
         "time": 133.137,
@@ -156,7 +156,7 @@
         "time": 149.302,
         "text": "消えていく 残像は 真夜中のプリズム",
         "translation": "那消逝的残像 就好像深夜棱镜",
-        "romaji": "kie te iku   zanzō wa   mayonaka no purizumu"
+        "romaji": "kie te iku   zanzo wa   mayonaka no purizumu"
       },
       {
         "time": 156.172,
@@ -180,7 +180,7 @@
         "time": 168.795,
         "text": "なぞるような こんな僕でも",
         "translation": "好似夜之深渊的我",
-        "romaji": "nazoru yō na   konna boku de mo"
+        "romaji": "nazoru yo na   konna boku de mo"
       },
       {
         "time": 188.013,
@@ -210,13 +210,13 @@
         "time": 211.967,
         "text": "夜広げて 描こう絵空事",
         "translation": "展开黑夜描绘天空",
-        "romaji": "yoru hiroge te   egakō esoragoto"
+        "romaji": "yoru hiroge te   egako esoragoto"
       },
       {
         "time": 216.596,
         "text": "暗闇を 照らすような 満月じゃなくても",
         "translation": "即便我们并非那照亮黑暗的满月",
-        "romaji": "kurayami o   terasu yō na   mangetsu ja naku te mo"
+        "romaji": "kurayami o   terasu yo na   mangetsu ja naku te mo"
       },
       {
         "time": 223.679,
@@ -228,7 +228,7 @@
         "time": 227.524,
         "text": "色とりどりの光 放つような",
         "translation": "散发出流光溢彩的光芒",
-        "romaji": "irotoridori no hikari   hanatsu yō na"
+        "romaji": "irotoridori no hikari   hanatsu yo na"
       },
       {
         "time": 232.111,
@@ -243,7 +243,7 @@
         "romaji": "kimi ga donnani mabushiku te mo"
       }
     ],
-    "updatedAt": 1769271346346,
+    "updatedAt": 1769453152611,
     "isCorrected": true
   }
 }
