@@ -175,7 +175,7 @@ export default function Player() {
 
         <div className="flex items-center justify-between px-2">
           {/* Song Info */}
-          <div className="flex items-center gap-4 w-1/4 truncate">
+          <div className="flex items-center gap-4 w-auto md:w-1/4 truncate">
             {coverUrl && (
               <Image
                 src={coverUrl}
@@ -186,17 +186,17 @@ export default function Player() {
                 referrerPolicy="no-referrer"
               />
             )}
-            <div className="flex flex-col truncate">
+            <div className="hidden md:flex flex-col truncate">
               <span className="font-bold text-sm truncate text-foreground">{currentSong.name}</span>
               <span className="text-xs text-muted-foreground truncate">{currentSong.ar?.map(a => a.name).join(', ')}</span>
             </div>
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <button 
               onClick={() => setLoopMode(loopMode === 'off' ? 'single' : 'off')}
-              className={clsx("p-2 rounded-full hover:bg-muted transition-colors", loopMode === 'single' && "text-primary bg-primary/10")}
+              className={clsx("p-2 rounded-full hover:bg-muted transition-colors hidden md:block", loopMode === 'single' && "text-primary bg-primary/10")}
               title="Repeat One"
             >
               <Repeat1 size={20} className={loopMode !== 'single' ? "opacity-50" : ""} />
@@ -213,7 +213,7 @@ export default function Player() {
               {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
             </button>
 
-             <button className="text-foreground hover:scale-110 transition-transform hidden sm:block">
+            <button className="text-foreground hover:scale-110 transition-transform hidden sm:block">
               <SkipForward size={24} />
             </button>
 
@@ -227,7 +227,7 @@ export default function Player() {
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-4 w-1/4 justify-end">
+          <div className="flex items-center gap-4 w-auto md:w-1/4 justify-end">
             {/* Speed Control */}
             <div className="relative" ref={rateMenuRef}>
               <button
@@ -258,7 +258,7 @@ export default function Player() {
             </div>
 
             {/* Volume */}
-            <div className="flex items-center gap-2 group">
+            <div className="hidden md:flex items-center gap-2 group">
               <button onClick={() => setVolume(volume === 0 ? 1 : 0)}>
                 {volume === 0 ? <VolumeX size={18} className="text-muted-foreground" /> : <Volume2 size={18} className="text-muted-foreground" />}
               </button>
