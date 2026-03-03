@@ -46,5 +46,8 @@ export const musicApi = {
   },
   checkSong: async (id: number | string) => {
     return axios.get(`${API_BASE}/check/music`, { params: { id } });
+  },
+  getLyricNew: async (id: number | string) => {
+    return axios.get(`${API_BASE}/lyric/new`, { params: { id } });
   }
 };

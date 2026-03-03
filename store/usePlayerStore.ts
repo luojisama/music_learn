@@ -42,6 +42,8 @@ interface PlayerState {
   setCurrentLyricIndex: (index: number) => void;
   updateLyricRomaji: (index: number, romaji: string) => void;
   toggleLyricLoop: () => void;
+  isLoadingLyrics: boolean;
+  setLoadingLyrics: (loading: boolean) => void;
   // Seek Request
   seekTime: number | null;
   requestSeek: (time: number) => void;
@@ -59,6 +61,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   lyrics: [],
   currentLyricIndex: -1,
   isLyricLooping: false,
+  isLoadingLyrics: false,
   seekTime: null,
 
   setPlaying: (playing) => set({ isPlaying: playing }),
@@ -85,6 +88,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     return { lyrics: newLyrics };
   }),
   toggleLyricLoop: () => set((state) => ({ isLyricLooping: !state.isLyricLooping })),
+  setLoadingLyrics: (loading) => set({ isLoadingLyrics: loading }),
   requestSeek: (time) => set({ seekTime: time, currentTime: time }),
   clearSeek: () => set({ seekTime: null }),
 }));
