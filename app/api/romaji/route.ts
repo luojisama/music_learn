@@ -78,6 +78,11 @@ function convertNumbersToRomaji(text: string): string {
 
 function applyRomajiCorrections(text: string): string {
   let result = text;
+
+  // Strip Unicode diacritics produced by Hepburn romanization
+  // e.g. ō→o, ū→u, ā→a, ī→i, ē→e  (NFD decompose then remove combining marks)
+  result = result.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
   // Apply specific corrections for common particles or song readings
   // that kuromoji often gets wrong in "spaced" mode
   const corrections: { [key: string]: string } = {
@@ -87,11 +92,10 @@ function applyRomajiCorrections(text: string): string {
   };
 
   Object.entries(corrections).forEach(([old, curr]) => {
-    // Replace at the beginning, middle, or end with spaces
     result = result.replace(new RegExp(old, 'g'), curr);
   });
 
-  return result.trim(); 
+  return result.trim();
 }
 
 export async function POST(req: NextRequest) {

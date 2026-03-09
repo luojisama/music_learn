@@ -103,7 +103,9 @@ export default function Lyrics() {
     }
   };
 
-  // AI 审核用户编辑的罗马音（客户端分批串行，每批 5 行，避免 Vercel 10s 超时）
+  // AI 审核用户编辑的罗马音
+  // - 动态批次：按内容字符量估算每批行数（短行多批量，长行少批量）
+  // - 遇错跳过当批继续处理，不中断剩余行，确保全曲都被审核
   const handleAIReview = async () => {
     if (isReviewing || lyrics.length === 0) return;
 
@@ -117,15 +119,22 @@ export default function Lyrics() {
       return;
     }
 
+    // 动态计算每批行数：目标单批输入字符 ≤ 400，限制 2~10 行/批
+    const totalChars = lyricsWithRomaji.reduce(
+      (sum, item) => sum + item.text.length + item.romaji.length, 0
+    );
+    const avgChars = totalChars / lyricsWithRomaji.length || 40;
+    const BATCH = Math.max(2, Math.min(10, Math.floor(400 / avgChars)));
+
     setIsReviewing(true);
     setReviewResults({});
     setReviewError(null);
+    setReviewProgress({ done: 0, total: lyricsWithRomaji.length });
 
-    const BATCH = 5;
     const lang = detectLang(lyrics);
     const accumulated: Record<number, { approved: boolean; suggestion?: string; comment?: string }> = {};
-
-    setReviewProgress({ done: 0, total: lyricsWithRomaji.length });
+    let failedBatches = 0;
+    let fatalError = false;
 
     try {
       for (let start = 0; start < lyricsWithRomaji.length; start += BATCH) {
@@ -135,27 +144,45 @@ export default function Lyrics() {
           const res = await axios.post('/api/ai-review', { items: batch, lang });
 
           if (res.data.error) {
+            // 服务端配置错误（如未设置 API key）→ 中止整个审核
             setReviewError(res.data.error + (res.data.details ? `：${res.data.details}` : ''));
-            setTimeout(() => setReviewError(null), 8000);
+            setTimeout(() => setReviewError(null), 10000);
+            fatalError = true;
             break;
           }
 
           for (const item of res.data.results || []) {
-            accumulated[item.index] = { approved: item.approved, suggestion: item.suggestion, comment: item.comment };
+            accumulated[item.index] = {
+              approved: item.approved,
+              suggestion: item.suggestion,
+              comment: item.comment,
+            };
           }
-          setReviewResults({ ...accumulated });
-          setReviewProgress({ done: Math.min(start + BATCH, lyricsWithRomaji.length), total: lyricsWithRomaji.length });
         } catch (e: unknown) {
-          let msg = '未知错误';
-          if (axios.isAxiosError(e)) {
-            msg = e.response?.data?.details || e.response?.data?.error || e.message;
-          } else if (e instanceof Error) {
-            msg = e.message;
+          // 单批网络/超时错误 → 记录并跳过，继续下一批
+          failedBatches++;
+          const isAxios = axios.isAxiosError(e);
+          // 若是 401/403 (鉴权失败)，立即中止
+          if (isAxios && (e.response?.status === 401 || e.response?.status === 403)) {
+            const msg = e.response?.data?.error || '鉴权失败，请检查 AI_API_KEY';
+            setReviewError(msg);
+            setTimeout(() => setReviewError(null), 10000);
+            fatalError = true;
+            break;
           }
-          setReviewError(`审核中断（第 ${start + 1} 行起）: ${msg}`);
-          setTimeout(() => setReviewError(null), 8000);
-          break;
+          console.warn(`[AI Review] batch ${start}-${start + batch.length} failed, skipping:`, e);
         }
+
+        setReviewResults({ ...accumulated });
+        setReviewProgress({
+          done: Math.min(start + BATCH, lyricsWithRomaji.length),
+          total: lyricsWithRomaji.length,
+        });
+      }
+
+      if (failedBatches > 0 && !fatalError) {
+        setReviewError(`${failedBatches} 批请求失败（已跳过），其余行已完成审核`);
+        setTimeout(() => setReviewError(null), 6000);
       }
     } finally {
       setIsReviewing(false);
