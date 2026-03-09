@@ -720,7 +720,7 @@
         "time": 174.41,
         "text": "大丈夫 一人にはしないよ",
         "translation": "别担心 我绝不会让你独行",
-        "romaji": "daijobu   ichi nin ni wa shi nai yo",
+        "romaji": "daijobu  hitori ni wa shi nai yo",
         "furigana": "<ruby>大丈夫<rp>(</rp><rt>だいじょうぶ</rt><rp>)</rp></ruby> <ruby>一<rp>(</rp><rt>いち</rt><rp>)</rp></ruby><ruby>人<rp>(</rp><rt>にん</rt><rp>)</rp></ruby>にはしないよ"
       },
       {
@@ -787,7 +787,7 @@
         "furigana": "<ruby>叶<rp>(</rp><rt>かな</rt><rp>)</rp></ruby>うさ<ruby>今<rp>(</rp><rt>いま</rt><rp>)</rp></ruby> <ruby>物語<rp>(</rp><rt>ものがたり</rt><rp>)</rp></ruby>を<ruby>巡<rp>(</rp><rt>めぐ</rt><rp>)</rp></ruby>ろう"
       }
     ],
-    "updatedAt": 1773038811980,
+    "updatedAt": 1773039208350,
     "isCorrected": true
   }
 }
