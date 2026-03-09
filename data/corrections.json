@@ -6,244 +6,284 @@
         "time": 0,
         "text": "作词 : ヒグチアイ",
         "translation": "",
-        "romaji": "saku 词   :   higuchiai"
+        "romaji": "saku 词   :   higuchiai",
+        "furigana": "<ruby>作<rp>(</rp><rt>さく</rt><rp>)</rp></ruby><ruby>词<rp>(</rp><rt>词</rt><rp>)</rp></ruby> : ヒグチアイ"
       },
       {
         "time": 1,
         "text": "作曲 : 内藤英雅",
         "translation": "",
-        "romaji": "sakkyoku   :   naitō ei miyabi"
+        "romaji": "sakkyoku   :   naitō ei miyabi",
+        "furigana": "<ruby>作曲<rp>(</rp><rt>さっきょく</rt><rp>)</rp></ruby> : <ruby>内藤<rp>(</rp><rt>ないとう</rt><rp>)</rp></ruby><ruby>英<rp>(</rp><rt>えい</rt><rp>)</rp></ruby><ruby>雅<rp>(</rp><rt>みやび</rt><rp>)</rp></ruby>"
       },
       {
         "time": 2,
         "text": "编曲 : 三井律郎",
         "translation": "",
-        "romaji": "编 kyoku   :   mitsui ritsurō"
+        "romaji": "编 kyoku   :   mitsui ritsurō",
+        "furigana": "<ruby>编<rp>(</rp><rt>编</rt><rp>)</rp></ruby><ruby>曲<rp>(</rp><rt>きょく</rt><rp>)</rp></ruby> : <ruby>三井<rp>(</rp><rt>みつい</rt><rp>)</rp></ruby><ruby>律郎<rp>(</rp><rt>りつろう</rt><rp>)</rp></ruby>"
       },
       {
         "time": 20.146,
         "text": "もうすぐ時計は6時",
         "translation": "时钟快要走到六点",
-        "romaji": "mosugu tokei wa roku ji"
+        "romaji": "mōsugu tokei wa roku ji",
+        "furigana": "もうすぐ<ruby>時計<rp>(</rp><rt>とけい</rt><rp>)</rp></ruby>は6<ruby>時<rp>(</rp><rt>じ</rt><rp>)</rp></ruby>"
       },
       {
         "time": 24.208,
         "text": "もうそこに一番星",
         "translation": "夜空已然出现了第一颗星",
-        "romaji": "mo soko ni ichiban boshi"
+        "romaji": "mō soko ni ichiban hoshi",
+        "furigana": "もうそこに<ruby>一番<rp>(</rp><rt>いちばん</rt><rp>)</rp></ruby><ruby>星<rp>(</rp><rt>ほし</rt><rp>)</rp></ruby>"
       },
       {
         "time": 27.607,
         "text": "影を踏んで 夜に紛れたくなる帰り道",
         "translation": "想踩着影子 混入那黑夜的归途",
-        "romaji": "kage o fun de   yoru ni magire taku naru kaerimichi"
+        "romaji": "kage o fun de   yoru ni magire taku naru kaerimichi",
+        "furigana": "<ruby>影<rp>(</rp><rt>かげ</rt><rp>)</rp></ruby>を<ruby>踏<rp>(</rp><rt>ふ</rt><rp>)</rp></ruby>んで <ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby>に<ruby>紛<rp>(</rp><rt>まぎ</rt><rp>)</rp></ruby>れたくなる<ruby>帰<rp>(</rp><rt>かえ</rt><rp>)</rp></ruby>り<ruby>道<rp>(</rp><rt>みち</rt><rp>)</rp></ruby>"
       },
       {
         "time": 35.712,
         "text": "どんなに探してみても",
         "translation": "无论我如何寻找",
-        "romaji": "donnani sagashi te mi te mo"
+        "romaji": "donnani sagashi te mi te mo",
+        "furigana": "どんなに<ruby>探<rp>(</rp><rt>さが</rt><rp>)</rp></ruby>してみても"
       },
       {
         "time": 39.599,
         "text": "一つしかない星",
         "translation": "仍只有一颗星星",
-        "romaji": "hitotsu shika nai hoshi"
+        "romaji": "hitotsu shika nai hoshi",
+        "furigana": "<ruby>一<rp>(</rp><rt>ひと</rt><rp>)</rp></ruby>つしかない<ruby>星<rp>(</rp><rt>ほし</rt><rp>)</rp></ruby>"
       },
       {
         "time": 43.067,
         "text": "何億光年 離れたところからあんなに輝く",
         "translation": "从相距几亿光年的地方 散发出那样的光芒",
-        "romaji": "nan oku konen   hanare ta tokoro kara annani kagayaku"
+        "romaji": "nan oku kōnen   hanare ta tokoro kara annani kagayaku",
+        "furigana": "<ruby>何<rp>(</rp><rt>なん</rt><rp>)</rp></ruby><ruby>億<rp>(</rp><rt>おく</rt><rp>)</rp></ruby><ruby>光年<rp>(</rp><rt>こうねん</rt><rp>)</rp></ruby> <ruby>離<rp>(</rp><rt>はな</rt><rp>)</rp></ruby>れたところからあんなに<ruby>輝<rp>(</rp><rt>かがや</rt><rp>)</rp></ruby>く"
       },
       {
         "time": 53.144,
         "text": "いいな 君は みんなから愛されて",
         "translation": "真好啊 你被大家所爱着",
-        "romaji": "ii na   kimi wa   minna kara aisa re te"
+        "romaji": "ii na   kimi wa   minna kara aisa re te",
+        "furigana": "いいな <ruby>君<rp>(</rp><rt>きみ</rt><rp>)</rp></ruby>は みんなから<ruby>愛<rp>(</rp><rt>あい</rt><rp>)</rp></ruby>されて"
       },
       {
         "time": 61.026,
         "text": "「いいや 僕は ずっと一人きりさ」",
         "translation": "「并不是啊 我一直都孤身一人啊」",
-        "romaji": "\" ii ya   boku wa   zutto ichi nin giri sa \""
+        "romaji": "\"ii ya boku wa zutto hitorikiri sa\"",
+        "furigana": "「いいや <ruby>僕<rp>(</rp><rt>ぼく</rt><rp>)</rp></ruby>は ずっと<ruby>一<rp>(</rp><rt>いち</rt><rp>)</rp></ruby><ruby>人<rp>(</rp><rt>にん</rt><rp>)</rp></ruby>きりさ」"
       },
       {
         "time": 68.275,
         "text": "君と集まって星座になれたら",
         "translation": "若能与你相聚化作星座",
-        "romaji": "kimi to atsumatte seiza ni nare tara"
+        "romaji": "kimi to atsumatte seiza ni nare tara",
+        "furigana": "<ruby>君<rp>(</rp><rt>きみ</rt><rp>)</rp></ruby>と<ruby>集<rp>(</rp><rt>あつ</rt><rp>)</rp></ruby>まって<ruby>星座<rp>(</rp><rt>せいざ</rt><rp>)</rp></ruby>になれたら"
       },
       {
         "time": 72.44,
         "text": "星降る夜 一瞬の願い事",
         "translation": "在繁星降下的夜晚 将一瞬的愿望",
-        "romaji": "hoshi furu yoru   isshun no negaigoto"
+        "romaji": "hoshi furu yoru   isshun no negaigoto",
+        "furigana": "<ruby>星<rp>(</rp><rt>ほし</rt><rp>)</rp></ruby><ruby>降<rp>(</rp><rt>ふ</rt><rp>)</rp></ruby>る<ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby> <ruby>一瞬<rp>(</rp><rt>いっしゅん</rt><rp>)</rp></ruby>の<ruby>願<rp>(</rp><rt>ねが</rt><rp>)</rp></ruby>い<ruby>事<rp>(</rp><rt>ごと</rt><rp>)</rp></ruby>"
       },
       {
         "time": 77.023,
         "text": "きらめいて ゆらめいて 震えてるシグナル",
         "translation": "对那闪烁着的 于空中摇曳颤抖的信号许下",
-        "romaji": "kiramei te   yuramei te   furue teru shigunaru"
+        "romaji": "kiramei te   yuramei te   furue teru shigunaru",
+        "furigana": "きらめいて ゆらめいて <ruby>震<rp>(</rp><rt>ふる</rt><rp>)</rp></ruby>えてるシグナル"
       },
       {
         "time": 84.055,
         "text": "君と集まって星座になれたら",
         "translation": "若能与你相聚化作星座",
-        "romaji": "kimi to atsumatte seiza ni nare tara"
+        "romaji": "kimi to atsumatte seiza ni nare tara",
+        "furigana": "<ruby>君<rp>(</rp><rt>きみ</rt><rp>)</rp></ruby>と<ruby>集<rp>(</rp><rt>あつ</rt><rp>)</rp></ruby>まって<ruby>星座<rp>(</rp><rt>せいざ</rt><rp>)</rp></ruby>になれたら"
       },
       {
         "time": 87.852,
         "text": "空見上げて 指を差されるような",
         "translation": "想化作他人仰望星空 所指向的那个星座",
-        "romaji": "sora miage te   yubi o sasa reru yo na"
+        "romaji": "sora miage te   yubi o sasa reru yō na",
+        "furigana": "<ruby>空<rp>(</rp><rt>そら</rt><rp>)</rp></ruby><ruby>見上<rp>(</rp><rt>みあ</rt><rp>)</rp></ruby>げて <ruby>指<rp>(</rp><rt>ゆび</rt><rp>)</rp></ruby>を<ruby>差<rp>(</rp><rt>さ</rt><rp>)</rp></ruby>されるような"
       },
       {
         "time": 92.673,
         "text": "つないだ線 解かないで",
         "translation": "请不要将那 连结你我的线解开",
-        "romaji": "tsunai da sen   toka nai de"
+        "romaji": "tsunai da sen   toka nai de",
+        "furigana": "つないだ<ruby>線<rp>(</rp><rt>せん</rt><rp>)</rp></ruby> <ruby>解<rp>(</rp><rt>と</rt><rp>)</rp></ruby>かないで"
       },
       {
         "time": 96.571,
         "text": "僕がどんなに眩しくても",
         "translation": "无论我有多么耀眼",
-        "romaji": "boku ga donnani mabushiku te mo"
+        "romaji": "boku ga donnani mabushiku te mo",
+        "furigana": "<ruby>僕<rp>(</rp><rt>ぼく</rt><rp>)</rp></ruby>がどんなに<ruby>眩<rp>(</rp><rt>まぶ</rt><rp>)</rp></ruby>しくても"
       },
       {
         "time": 107.939,
         "text": "もうすぐ時計は8時",
         "translation": "时钟快要走到八点",
-        "romaji": "mosugu tokei wa hachi ji"
+        "romaji": "mōsugu tokei wa hachi ji",
+        "furigana": "もうすぐ<ruby>時計<rp>(</rp><rt>とけい</rt><rp>)</rp></ruby>は8<ruby>時<rp>(</rp><rt>じ</rt><rp>)</rp></ruby>"
       },
       {
         "time": 111.938,
         "text": "夜空に満天の星",
         "translation": "夜空已有漫天繁星",
-        "romaji": "yozora ni manten no hoshi"
+        "romaji": "yozora ni manten no hoshi",
+        "furigana": "<ruby>夜空<rp>(</rp><rt>よぞら</rt><rp>)</rp></ruby>に<ruby>満天<rp>(</rp><rt>まんてん</rt><rp>)</rp></ruby>の<ruby>星<rp>(</rp><rt>ほし</rt><rp>)</rp></ruby>"
       },
       {
         "time": 115.23,
         "text": "何億光年 離れたところにはもうないかもしれない",
         "translation": "可能和我们已然不是相距几亿光年了",
-        "romaji": "nan oku kōnen   hanare ta tokoro ni wa mo nai kamo shire nai"
+        "romaji": "nan oku kōnen   hanare ta tokoro ni wa mō nai kamo shire nai",
+        "furigana": "<ruby>何<rp>(</rp><rt>なん</rt><rp>)</rp></ruby><ruby>億<rp>(</rp><rt>おく</rt><rp>)</rp></ruby><ruby>光年<rp>(</rp><rt>こうねん</rt><rp>)</rp></ruby> <ruby>離<rp>(</rp><rt>はな</rt><rp>)</rp></ruby>れたところにはもうないかもしれない"
       },
       {
         "time": 125.321,
         "text": "月が綺麗で 泣きそうになるのは",
         "translation": "月色真美 令我泫然欲泣",
-        "romaji": "tsuki ga kirei de   naki so ni naru no wa"
+        "romaji": "tsuki ga kirei de   naki sō ni naru no wa",
+        "furigana": "<ruby>月<rp>(</rp><rt>つき</rt><rp>)</rp></ruby>が<ruby>綺麗<rp>(</rp><rt>きれい</rt><rp>)</rp></ruby>で <ruby>泣<rp>(</rp><rt>な</rt><rp>)</rp></ruby>きそうになるのは"
       },
       {
         "time": 133.137,
         "text": "いつの日にか 別れが来るから",
         "translation": "因为总有一天 将迎来别离",
-        "romaji": "itsu no hi ni ka   wakare ga kuru kara"
+        "romaji": "itsu no hi ni ka   wakare ga kuru kara",
+        "furigana": "いつの<ruby>日<rp>(</rp><rt>ひ</rt><rp>)</rp></ruby>にか <ruby>別<rp>(</rp><rt>わか</rt><rp>)</rp></ruby>れが<ruby>来<rp>(</rp><rt>く</rt><rp>)</rp></ruby>るから"
       },
       {
         "time": 140.576,
         "text": "君と集まって星座になれたら",
         "translation": "若能与你相聚化作星座",
-        "romaji": "kimi to atsumatte seiza ni nare tara"
+        "romaji": "kimi to atsumatte seiza ni nare tara",
+        "furigana": "<ruby>君<rp>(</rp><rt>きみ</rt><rp>)</rp></ruby>と<ruby>集<rp>(</rp><rt>あつ</rt><rp>)</rp></ruby>まって<ruby>星座<rp>(</rp><rt>せいざ</rt><rp>)</rp></ruby>になれたら"
       },
       {
         "time": 144.672,
         "text": "彗星みたい 流れるひとりごと",
         "translation": "好似彗星一般的自言自语",
-        "romaji": "suisei mitai   nagareru hitori goto"
+        "romaji": "suisei mitai   nagareru hitori goto",
+        "furigana": "<ruby>彗星<rp>(</rp><rt>すいせい</rt><rp>)</rp></ruby>みたい <ruby>流<rp>(</rp><rt>なが</rt><rp>)</rp></ruby>れるひとりごと"
       },
       {
         "time": 149.302,
         "text": "消えていく 残像は 真夜中のプリズム",
         "translation": "那消逝的残像 就好像深夜棱镜",
-        "romaji": "kie te iku   zanzo wa   mayonaka no purizumu"
+        "romaji": "kie te iku   zanzō wa   mayonaka no purizumu",
+        "furigana": "<ruby>消<rp>(</rp><rt>き</rt><rp>)</rp></ruby>えていく <ruby>残像<rp>(</rp><rt>ざんぞう</rt><rp>)</rp></ruby>は <ruby>真夜中<rp>(</rp><rt>まよなか</rt><rp>)</rp></ruby>のプリズム"
       },
       {
         "time": 156.172,
         "text": "君と集まって星座になれたら",
         "translation": "若能与你相聚化作星座",
-        "romaji": "kimi to atsumatte seiza ni nare tara"
+        "romaji": "kimi to atsumatte seiza ni nare tara",
+        "furigana": "<ruby>君<rp>(</rp><rt>きみ</rt><rp>)</rp></ruby>と<ruby>集<rp>(</rp><rt>あつ</rt><rp>)</rp></ruby>まって<ruby>星座<rp>(</rp><rt>せいざ</rt><rp>)</rp></ruby>になれたら"
       },
       {
         "time": 160.022,
         "text": "切なる願い 誰かに届いたら",
         "translation": "我衷心希望 能传达给某人",
-        "romaji": "setsu naru negai   dare ka ni todoi tara"
+        "romaji": "setsu naru negai   dare ka ni todoi tara",
+        "furigana": "<ruby>切<rp>(</rp><rt>せつ</rt><rp>)</rp></ruby>なる<ruby>願<rp>(</rp><rt>ねが</rt><rp>)</rp></ruby>い <ruby>誰<rp>(</rp><rt>だれ</rt><rp>)</rp></ruby>かに<ruby>届<rp>(</rp><rt>とど</rt><rp>)</rp></ruby>いたら"
       },
       {
         "time": 164.857,
         "text": "変われるかな 夜の淵を",
         "translation": "是否能改变呢 即便是这",
-        "romaji": "hen wareru ka na   yoru no fuchi o"
+        "romaji": "hen wareru ka na   yoru no fuchi o",
+        "furigana": "<ruby>変<rp>(</rp><rt>へん</rt><rp>)</rp></ruby>われるかな <ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby>の<ruby>淵<rp>(</rp><rt>ふち</rt><rp>)</rp></ruby>を"
       },
       {
         "time": 168.795,
         "text": "なぞるような こんな僕でも",
         "translation": "好似夜之深渊的我",
-        "romaji": "nazoru yo na   konna boku de mo"
+        "romaji": "nazoru yō na   konna boku de mo",
+        "furigana": "なぞるような こんな<ruby>僕<rp>(</rp><rt>ぼく</rt><rp>)</rp></ruby>でも"
       },
       {
         "time": 188.013,
         "text": "遥か彼方 僕らは出会ってしまった",
         "translation": "我们于那遥远的彼方相遇",
-        "romaji": "haruka kanata   bokura wa deatte shimatta"
+        "romaji": "haruka kanata   bokura wa deatte shimatta",
+        "furigana": "<ruby>遥<rp>(</rp><rt>はる</rt><rp>)</rp></ruby>か<ruby>彼方<rp>(</rp><rt>かなた</rt><rp>)</rp></ruby> <ruby>僕<rp>(</rp><rt>ぼく</rt><rp>)</rp></ruby>らは<ruby>出会<rp>(</rp><rt>であ</rt><rp>)</rp></ruby>ってしまった"
       },
       {
         "time": 195.792,
         "text": "カルマだから 何度も出会ってしまうよ",
         "translation": "因为这是我们的命运 所以我们将多次相遇",
-        "romaji": "karuma da kara   nan do mo deatte shimau yo"
+        "romaji": "karuma da kara   nan do mo deatte shimau yo",
+        "furigana": "カルマだから <ruby>何<rp>(</rp><rt>なん</rt><rp>)</rp></ruby><ruby>度<rp>(</rp><rt>ど</rt><rp>)</rp></ruby>も<ruby>出会<rp>(</rp><rt>であ</rt><rp>)</rp></ruby>ってしまうよ"
       },
       {
         "time": 203.034,
         "text": "雲の隙間で",
         "translation": "在那云彩的间隙中相遇",
-        "romaji": "kumo no sukima de"
+        "romaji": "kumo no sukima de",
+        "furigana": "<ruby>雲<rp>(</rp><rt>くも</rt><rp>)</rp></ruby>の<ruby>隙間<rp>(</rp><rt>すきま</rt><rp>)</rp></ruby>で"
       },
       {
         "time": 207.939,
         "text": "君と集まって星座になれたら",
         "translation": "若能与你相聚化作星座",
-        "romaji": "kimi to atsumatte seiza ni nare tara"
+        "romaji": "kimi to atsumatte seiza ni nare tara",
+        "furigana": "<ruby>君<rp>(</rp><rt>きみ</rt><rp>)</rp></ruby>と<ruby>集<rp>(</rp><rt>あつ</rt><rp>)</rp></ruby>まって<ruby>星座<rp>(</rp><rt>せいざ</rt><rp>)</rp></ruby>になれたら"
       },
       {
         "time": 211.967,
         "text": "夜広げて 描こう絵空事",
         "translation": "展开黑夜描绘天空",
-        "romaji": "yoru hiroge te   egako esoragoto"
+        "romaji": "yoru hiroge te   egakō esoragoto",
+        "furigana": "<ruby>夜<rp>(</rp><rt>よる</rt><rp>)</rp></ruby><ruby>広<rp>(</rp><rt>ひろ</rt><rp>)</rp></ruby>げて <ruby>描<rp>(</rp><rt>えが</rt><rp>)</rp></ruby>こう<ruby>絵空事<rp>(</rp><rt>えそらごと</rt><rp>)</rp></ruby>"
       },
       {
         "time": 216.596,
         "text": "暗闇を 照らすような 満月じゃなくても",
         "translation": "即便我们并非那照亮黑暗的满月",
-        "romaji": "kurayami o   terasu yo na   mangetsu ja naku te mo"
+        "romaji": "kurayami o   terasu yō na   mangetsu ja naku te mo",
+        "furigana": "<ruby>暗闇<rp>(</rp><rt>くらやみ</rt><rp>)</rp></ruby>を <ruby>照<rp>(</rp><rt>て</rt><rp>)</rp></ruby>らすような <ruby>満月<rp>(</rp><rt>まんげつ</rt><rp>)</rp></ruby>じゃなくても"
       },
       {
         "time": 223.679,
         "text": "だから集まって星座になりたい",
         "translation": "所以我想与你相聚化作星座",
-        "romaji": "dakara atsumatte seiza ni nari tai"
+        "romaji": "dakara atsumatte seiza ni nari tai",
+        "furigana": "だから<ruby>集<rp>(</rp><rt>あつ</rt><rp>)</rp></ruby>まって<ruby>星座<rp>(</rp><rt>せいざ</rt><rp>)</rp></ruby>になりたい"
       },
       {
         "time": 227.524,
         "text": "色とりどりの光 放つような",
         "translation": "散发出流光溢彩的光芒",
-        "romaji": "irotoridori no hikari   hanatsu yo na"
+        "romaji": "irotoridori no hikari   hanatsu yō na",
+        "furigana": "<ruby>色<rp>(</rp><rt>いろ</rt><rp>)</rp></ruby>とりどりの<ruby>光<rp>(</rp><rt>ひかり</rt><rp>)</rp></ruby> <ruby>放<rp>(</rp><rt>はな</rt><rp>)</rp></ruby>つような"
       },
       {
         "time": 232.111,
         "text": "つないだ線 解かないよ",
         "translation": "我绝不会将那 连结你我的线解开",
-        "romaji": "tsunai da sen   toka nai yo"
+        "romaji": "tsunai da sen   toka nai yo",
+        "furigana": "つないだ<ruby>線<rp>(</rp><rt>せん</rt><rp>)</rp></ruby> <ruby>解<rp>(</rp><rt>と</rt><rp>)</rp></ruby>かないよ"
       },
       {
         "time": 236.237,
         "text": "君がどんなに眩しくても",
         "translation": "无论你将有多么耀眼",
-        "romaji": "kimi ga donnani mabushiku te mo"
+        "romaji": "kimi ga donnani mabushiku te mo",
+        "furigana": "<ruby>君<rp>(</rp><rt>きみ</rt><rp>)</rp></ruby>がどんなに<ruby>眩<rp>(</rp><rt>まぶ</rt><rp>)</rp></ruby>しくても"
       }
     ],
-    "updatedAt": 1769453152611,
+    "updatedAt": 1773021181949,
     "isCorrected": true
   }
 }
