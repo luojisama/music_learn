@@ -5,6 +5,7 @@ export interface LyricLine {
   text: string;
   translation?: string;
   romaji?: string;
+  furigana?: string; // HTML from kuroshiro furigana mode, e.g. <ruby>漢<rt>かん</rt></ruby>
 }
 
 export interface Song {
@@ -41,6 +42,7 @@ interface PlayerState {
   setLyrics: (lyrics: LyricLine[]) => void;
   setCurrentLyricIndex: (index: number) => void;
   updateLyricRomaji: (index: number, romaji: string) => void;
+  updateLyricFurigana: (index: number, furigana: string) => void;
   toggleLyricLoop: () => void;
   isLoadingLyrics: boolean;
   setLoadingLyrics: (loading: boolean) => void;
@@ -84,6 +86,13 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     const newLyrics = [...state.lyrics];
     if (newLyrics[index]) {
       newLyrics[index] = { ...newLyrics[index], romaji };
+    }
+    return { lyrics: newLyrics };
+  }),
+  updateLyricFurigana: (index, furigana) => set((state) => {
+    const newLyrics = [...state.lyrics];
+    if (newLyrics[index]) {
+      newLyrics[index] = { ...newLyrics[index], furigana };
     }
     return { lyrics: newLyrics };
   }),

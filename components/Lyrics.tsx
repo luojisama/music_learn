@@ -5,7 +5,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 import axios from 'axios';
-import { Loader2, Wand2, Save, Check, Sparkles, Music2, Bot, CheckCircle2, AlertCircle, CornerDownRight } from 'lucide-react';
+import { Loader2, Wand2, Save, Check, Sparkles, Music2, Bot, CheckCircle2, AlertCircle, CornerDownRight, Type } from 'lucide-react';
 import { useLibraryStore } from '@/store/useLibraryStore';
 
 export default function Lyrics() {
@@ -13,6 +13,7 @@ export default function Lyrics() {
     lyrics,
     currentLyricIndex,
     updateLyricRomaji,
+    updateLyricFurigana,
     requestSeek,
     isLyricLooping,
     currentSong,
@@ -30,6 +31,8 @@ export default function Lyrics() {
   const [isReviewing, setIsReviewing] = useState(false);
   const [reviewResults, setReviewResults] = useState<Record<number, { approved: boolean; suggestion?: string; comment?: string }>>({});
   const [reviewError, setReviewError] = useState<string | null>(null);
+  const [isAutoFurigana, setIsAutoFurigana] = useState(false);
+  const [showFurigana, setShowFurigana] = useState(true);
 
   const isCorrected = currentSong ? !!corrections[currentSong.id] : false;
 
@@ -66,6 +69,34 @@ export default function Lyrics() {
     return lines.some(l => isJapanese(l.text)) ? 'ja' : 'zh';
   }, []);
 
+  // 全部自动假名
+  const handleAutoFurigana = async () => {
+    if (lyrics.length === 0 || isAutoFurigana) return;
+    if (detectLang(lyrics) !== 'ja') return; // 只对日语生效
+    const currentSongId = usePlayerStore.getState().currentSong?.id;
+    if (!currentSongId) return;
+
+    setIsAutoFurigana(true);
+    try {
+      for (let i = 0; i < lyrics.length; i++) {
+        if (usePlayerStore.getState().currentSong?.id !== currentSongId) break;
+        const line = usePlayerStore.getState().lyrics[i];
+        if (line.furigana || !line.text.trim()) continue;
+
+        try {
+          const res = await axios.post('/api/romaji', { text: line.text, lang: 'ja', furigana: true });
+          if (res.data.result && usePlayerStore.getState().currentSong?.id === currentSongId) {
+            updateLyricFurigana(i, res.data.result);
+          }
+        } catch (e) {
+          console.error('Failed to generate furigana for line', i, e);
+        }
+      }
+    } finally {
+      setIsAutoFurigana(false);
+    }
+  };
+
   // AI 审核用户编辑的罗马音
   const handleAIReview = async () => {
     if (isReviewing || lyrics.length === 0) return;
@@ -100,9 +131,14 @@ export default function Lyrics() {
       }
       setReviewResults(results);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : '未知错误';
+      let msg = '未知错误';
+      if (axios.isAxiosError(e)) {
+        msg = e.response?.data?.details || e.response?.data?.error || e.message;
+      } else if (e instanceof Error) {
+        msg = e.message;
+      }
       setReviewError(`审核失败: ${msg}`);
-      setTimeout(() => setReviewError(null), 6000);
+      setTimeout(() => setReviewError(null), 8000);
     } finally {
       setIsReviewing(false);
     }
@@ -232,6 +268,14 @@ export default function Lyrics() {
             {isReviewing ? '审核中...' : 'AI 审核'}
           </button>
           <button
+            onClick={handleAutoFurigana}
+            disabled={isAutoFurigana}
+            className="bg-card/90 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 text-xs font-bold flex items-center gap-2 transition-all text-sky-500 border border-border/20"
+          >
+            {isAutoFurigana ? <Loader2 size={14} className="animate-spin" /> : <Type size={14} />}
+            {isAutoFurigana ? '生成中...' : '假名'}
+          </button>
+          <button
             onClick={handleAutoRomaji}
             disabled={isAutoGenerating}
             className="bg-card/90 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 text-xs font-bold flex items-center gap-2 transition-all text-primary border border-border/20"
@@ -240,6 +284,21 @@ export default function Lyrics() {
             {t('auto_romaji')}
           </button>
         </div>
+        {/* 假名显示开关（有假名数据时出现）*/}
+        {lyrics.some(l => l.furigana) && (
+          <button
+            onClick={() => setShowFurigana(v => !v)}
+            className={clsx(
+              'self-end flex items-center gap-1.5 text-[10px] px-3 py-1 rounded-full border transition-all',
+              showFurigana
+                ? 'bg-sky-500/15 text-sky-500 border-sky-500/30'
+                : 'bg-card/60 text-muted-foreground/60 border-border/20'
+            )}
+          >
+            <Type size={10} />
+            <span>{showFurigana ? '假名已显示' : '假名已隐藏'}</span>
+          </button>
+        )}
         {Object.keys(reviewResults).length > 0 && (
           <div className="flex items-center gap-1.5 text-[10px] px-3 py-1 rounded-full bg-card/80 border border-border/30 backdrop-blur-md">
             <CheckCircle2 size={10} className="text-green-500" />
@@ -367,12 +426,14 @@ export default function Lyrics() {
                   </div>
                 )}
 
-                {/* Main Text */}
+                {/* Main Text — with optional furigana */}
                 <div className={clsx(
-                  'text-xl md:text-2xl font-bold tracking-wide',
+                  'text-xl md:text-2xl font-bold tracking-wide leading-loose',
                   isActive ? 'text-primary' : 'text-foreground/80'
                 )}>
-                  {line.text}
+                  {showFurigana && line.furigana
+                    ? <FuriganaText html={line.furigana} />
+                    : line.text}
                 </div>
 
                 {/* Translation */}
@@ -391,6 +452,37 @@ export default function Lyrics() {
       </div>
     </div>
   );
+}
+
+/**
+ * Safely renders kuroshiro furigana HTML (e.g. <ruby>漢<rt>かん</rt></ruby>)
+ * as React elements — no dangerouslySetInnerHTML needed.
+ */
+function FuriganaText({ html }: { html: string }) {
+  const parts: React.ReactNode[] = [];
+  const regex = /<ruby>([^<]*)<rt>([^<]*)<\/rt><\/ruby>/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  while ((match = regex.exec(html)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(<span key={key++}>{html.slice(lastIndex, match.index)}</span>);
+    }
+    parts.push(
+      <ruby key={key++} className="ruby-text">
+        {match[1]}
+        <rt className="text-[0.45em] font-normal tracking-wide">{match[2]}</rt>
+      </ruby>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < html.length) {
+    parts.push(<span key={key++}>{html.slice(lastIndex)}</span>);
+  }
+
+  return <>{parts}</>;
 }
 
 function RomajiText({ text, isActive, onUpdate }: { text?: string; isActive: boolean; onUpdate: (val: string) => void }) {

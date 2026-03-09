@@ -96,7 +96,7 @@ function applyRomajiCorrections(text: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, lang } = await req.json();
+    const { text, lang, furigana } = await req.json();
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -107,19 +107,25 @@ export async function POST(req: NextRequest) {
       const result = pinyin(text, { toneType: 'none', type: 'string', v: true });
       return NextResponse.json({ result });
     } else {
-      // Japanese -> Romaji (default)
+      // Japanese
       try {
         const k = await initKuroshiro();
-        
+
+        if (furigana) {
+          // Return furigana HTML: <ruby>漢<rt>かん</rt></ruby>
+          const result = await k.convert(text, { to: 'hiragana', mode: 'furigana' });
+          return NextResponse.json({ result });
+        }
+
         // 1. Convert to Romaji
         let result = await k.convert(text, { to: 'romaji', mode: 'spaced' });
-        
+
         // 2. Convert Arabic numerals to Romaji
         result = convertNumbersToRomaji(result);
-        
+
         // 3. Apply manual corrections if any
         result = applyRomajiCorrections(result);
-        
+
         return NextResponse.json({ result });
       } catch (error) {
 

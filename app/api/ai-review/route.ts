@@ -4,6 +4,9 @@ const AI_API_URL = process.env.AI_API_URL?.trim().replace(/\/$/, '');
 const AI_API_KEY = process.env.AI_API_KEY?.trim();
 const AI_MODEL = process.env.AI_MODEL?.trim() || 'gpt-4o-mini';
 
+// Keep small — Vercel hobby functions time out at 10 s, Pro at 60 s
+const BATCH_SIZE = 20;
+
 interface ReviewItem {
   index: number;
   text: string;
@@ -17,20 +20,28 @@ export interface ReviewResult {
   comment?: string;
 }
 
-function extractJson(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    const arrayMatch = text.match(/\[[\s\S]*\]/);
-    if (arrayMatch) {
-      try { return JSON.parse(arrayMatch[0]); } catch { /* continue */ }
+/** Strip markdown code fences, then extract first JSON array or object. */
+function extractJson(raw: string): unknown {
+  const stripped = raw
+    .replace(/```(?:json)?\s*/gi, '')
+    .replace(/```/g, '')
+    .trim();
+
+  for (const text of [stripped, raw]) {
+    try { return JSON.parse(text); } catch { /* continue */ }
+
+    const arrMatch = text.match(/\[[\s\S]*\]/);
+    if (arrMatch) {
+      try { return JSON.parse(arrMatch[0]); } catch { /* continue */ }
     }
+
     const objMatch = text.match(/\{[\s\S]*\}/);
     if (objMatch) {
       try { return JSON.parse(objMatch[0]); } catch { /* continue */ }
     }
-    throw new Error('无法从 AI 响应中提取 JSON');
   }
+
+  throw new Error(`无法解析 AI 响应为 JSON。内容片段：${raw.slice(0, 200)}`);
 }
 
 export async function POST(req: NextRequest) {
@@ -44,28 +55,38 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let items: ReviewItem[] = [];
+  let lang = 'ja';
   try {
-    const { items, lang } = await req.json() as { items: ReviewItem[]; lang: string };
+    const body = await req.json() as { items: ReviewItem[]; lang: string };
+    items = body.items ?? [];
+    lang = body.lang ?? 'ja';
+  } catch {
+    return NextResponse.json({ error: '请求体解析失败' }, { status: 400 });
+  }
 
-    if (!items || items.length === 0) {
-      return NextResponse.json({ results: [] });
-    }
+  if (items.length === 0) {
+    return NextResponse.json({ results: [] });
+  }
 
-    const batchItems = items.slice(0, 60);
-    const langName = lang === 'zh' ? '中文拼音' : '日语罗马音（Romaji）';
+  const batchItems = items.slice(0, BATCH_SIZE);
+  const langName = lang === 'zh' ? '中文拼音' : '日语罗马音（Romaji）';
 
-    const systemPrompt = `你是一个${langName}转写审核专家，专门审核日语歌词的罗马音转写准确性。
-请严格按照以下 JSON 数组格式返回结果，不要有任何额外说明或 markdown 代码块：
-[{"index": 数字, "approved": 布尔值, "suggestion": "建议转写（仅当 approved 为 false 时填写）", "comment": "简短说明（仅当 approved 为 false 时填写，不超过20字）"}]
+  const systemPrompt = `你是${langName}转写审核专家。只输出 JSON 数组，不要任何说明文字或代码块标记：
+[{"index":数字,"approved":布尔值,"suggestion":"建议转写，仅错误时填","comment":"不超过15字，仅错误时填"}]
 
 审核标准：
-- 罗马音拼写是否符合 Hepburn 罗马字规范
-- 粒子读音：は→wa，を→o，へ→e
-- 常见长音、促音处理是否正确
-- 整体是否能准确表示该歌词的日语发音
-- 如果转写基本正确但存在细微差异（如长音标注方式），也可以批准`;
+- 符合 Hepburn 罗马字规范
+- 粒子：は→wa，を→o，へ→e
+- 长音、促音处理正确
+- 整体可接受（细微差异如长音线）也判为 approved:true`;
 
-    const userPrompt = `请审核以下歌词的${langName}转写是否正确：\n${JSON.stringify(batchItems)}`;
+  const userPrompt = `审核以下歌词${langName}：${JSON.stringify(batchItems)}`;
+
+  let aiRaw = '';
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 28000);
 
     const response = await fetch(`${AI_API_URL}/chat/completions`, {
       method: 'POST',
@@ -80,37 +101,56 @@ export async function POST(req: NextRequest) {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.1,
-        max_tokens: 3000,
+        max_tokens: 2000,
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timer);
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('[AI Review] API error:', response.status, errText);
+      console.error('[AI Review] upstream error:', response.status, errText);
       return NextResponse.json(
-        { error: `AI API 返回错误 (${response.status})`, details: errText },
+        { error: `AI API 返回错误 (${response.status})`, details: errText.slice(0, 400) },
         { status: 502 }
       );
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content as string | undefined;
+    aiRaw = (data.choices?.[0]?.message?.content as string | undefined) ?? '';
 
-    if (!content) {
-      return NextResponse.json({ error: 'AI 返回了空响应' }, { status: 500 });
+    if (!aiRaw) {
+      return NextResponse.json(
+        { error: 'AI 返回空响应', details: JSON.stringify(data).slice(0, 300) },
+        { status: 500 }
+      );
     }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const isTimeout = msg.includes('abort') || msg.toLowerCase().includes('timeout');
+    console.error('[AI Review] fetch error:', msg);
+    return NextResponse.json(
+      {
+        error: isTimeout
+          ? '审核超时，请减少歌词行数后重试'
+          : `请求 AI 失败: ${msg}`,
+      },
+      { status: 502 }
+    );
+  }
 
-    const parsed = extractJson(content);
+  try {
+    const parsed = extractJson(aiRaw);
     const results: ReviewResult[] = Array.isArray(parsed)
       ? (parsed as ReviewResult[])
       : ((parsed as { results?: ReviewResult[] }).results ?? []);
-
     return NextResponse.json({ results });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[AI Review] Error:', error);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[AI Review] parse error:', msg);
     return NextResponse.json(
-      { error: '审核请求失败', details: message },
+      { error: 'AI 响应解析失败', details: msg },
       { status: 500 }
     );
   }
