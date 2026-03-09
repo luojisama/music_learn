@@ -112,15 +112,21 @@ export async function POST(req: NextRequest) {
         const k = await initKuroshiro();
 
         if (furigana) {
-          // Return furigana HTML with <rp> fallback tags
-          const raw = await k.convert(text, { to: 'hiragana', mode: 'furigana' });
-          // kuroshiro outputs <ruby>漢<rt>かん</rt></ruby>
-          // Insert <rp> for browsers that don't support ruby natively
-          const result = raw.replace(
+          // Generate furigana and romaji in parallel from the same kuroshiro instance
+          const [rawFurigana, rawRomaji] = await Promise.all([
+            k.convert(text, { to: 'hiragana', mode: 'furigana' }),
+            k.convert(text, { to: 'romaji', mode: 'spaced' }),
+          ]);
+
+          // Add <rp> fallback tags to furigana HTML
+          const result = rawFurigana.replace(
             /<ruby>([^<]*)<rt>([^<]*)<\/rt><\/ruby>/g,
             '<ruby>$1<rp>(</rp><rt>$2</rt><rp>)</rp></ruby>'
           );
-          return NextResponse.json({ result });
+
+          // Return aligned romaji so caller can sync both fields at once
+          const romaji = applyRomajiCorrections(convertNumbersToRomaji(rawRomaji));
+          return NextResponse.json({ result, romaji });
         }
 
         // 1. Convert to Romaji

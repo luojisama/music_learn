@@ -33,6 +33,7 @@ export default function Lyrics() {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [isAutoFurigana, setIsAutoFurigana] = useState(false);
   const [showFurigana, setShowFurigana] = useState(true);
+  const [reviewProgress, setReviewProgress] = useState<{ done: number; total: number } | null>(null);
 
   const isCorrected = currentSong ? !!corrections[currentSong.id] : false;
 
@@ -69,7 +70,7 @@ export default function Lyrics() {
     return lines.some(l => isJapanese(l.text)) ? 'ja' : 'zh';
   }, []);
 
-  // 全部自动假名
+  // 全部自动假名（同时对齐罗马音）
   const handleAutoFurigana = async () => {
     if (lyrics.length === 0 || isAutoFurigana) return;
     if (detectLang(lyrics) !== 'ja') return; // 只对日语生效
@@ -85,8 +86,13 @@ export default function Lyrics() {
 
         try {
           const res = await axios.post('/api/romaji', { text: line.text, lang: 'ja', furigana: true });
-          if (res.data.result && usePlayerStore.getState().currentSong?.id === currentSongId) {
+          if (usePlayerStore.getState().currentSong?.id !== currentSongId) break;
+          if (res.data.result) {
             updateLyricFurigana(i, res.data.result);
+          }
+          // Auto-align: sync romaji from the same kuroshiro reading
+          if (res.data.romaji) {
+            updateLyricRomaji(i, res.data.romaji);
           }
         } catch (e) {
           console.error('Failed to generate furigana for line', i, e);
@@ -97,7 +103,7 @@ export default function Lyrics() {
     }
   };
 
-  // AI 审核用户编辑的罗马音
+  // AI 审核用户编辑的罗马音（客户端分批串行，每批 5 行，避免 Vercel 10s 超时）
   const handleAIReview = async () => {
     if (isReviewing || lyrics.length === 0) return;
 
@@ -115,32 +121,45 @@ export default function Lyrics() {
     setReviewResults({});
     setReviewError(null);
 
+    const BATCH = 5;
+    const lang = detectLang(lyrics);
+    const accumulated: Record<number, { approved: boolean; suggestion?: string; comment?: string }> = {};
+
+    setReviewProgress({ done: 0, total: lyricsWithRomaji.length });
+
     try {
-      const lang = detectLang(lyrics);
-      const res = await axios.post('/api/ai-review', { items: lyricsWithRomaji, lang });
+      for (let start = 0; start < lyricsWithRomaji.length; start += BATCH) {
+        const batch = lyricsWithRomaji.slice(start, start + BATCH);
 
-      if (res.data.error) {
-        setReviewError(res.data.error + (res.data.details ? `：${res.data.details}` : ''));
-        setTimeout(() => setReviewError(null), 8000);
-        return;
-      }
+        try {
+          const res = await axios.post('/api/ai-review', { items: batch, lang });
 
-      const results: Record<number, { approved: boolean; suggestion?: string; comment?: string }> = {};
-      for (const item of res.data.results || []) {
-        results[item.index] = { approved: item.approved, suggestion: item.suggestion, comment: item.comment };
+          if (res.data.error) {
+            setReviewError(res.data.error + (res.data.details ? `：${res.data.details}` : ''));
+            setTimeout(() => setReviewError(null), 8000);
+            break;
+          }
+
+          for (const item of res.data.results || []) {
+            accumulated[item.index] = { approved: item.approved, suggestion: item.suggestion, comment: item.comment };
+          }
+          setReviewResults({ ...accumulated });
+          setReviewProgress({ done: Math.min(start + BATCH, lyricsWithRomaji.length), total: lyricsWithRomaji.length });
+        } catch (e: unknown) {
+          let msg = '未知错误';
+          if (axios.isAxiosError(e)) {
+            msg = e.response?.data?.details || e.response?.data?.error || e.message;
+          } else if (e instanceof Error) {
+            msg = e.message;
+          }
+          setReviewError(`审核中断（第 ${start + 1} 行起）: ${msg}`);
+          setTimeout(() => setReviewError(null), 8000);
+          break;
+        }
       }
-      setReviewResults(results);
-    } catch (e: unknown) {
-      let msg = '未知错误';
-      if (axios.isAxiosError(e)) {
-        msg = e.response?.data?.details || e.response?.data?.error || e.message;
-      } else if (e instanceof Error) {
-        msg = e.message;
-      }
-      setReviewError(`审核失败: ${msg}`);
-      setTimeout(() => setReviewError(null), 8000);
     } finally {
       setIsReviewing(false);
+      setReviewProgress(null);
     }
   };
 
@@ -265,7 +284,11 @@ export default function Lyrics() {
             className="bg-card/90 backdrop-blur-xl px-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 text-xs font-bold flex items-center gap-2 transition-all text-violet-500 border border-border/20"
           >
             {isReviewing ? <Loader2 size={14} className="animate-spin" /> : <Bot size={14} />}
-            {isReviewing ? '审核中...' : 'AI 审核'}
+            {isReviewing
+              ? reviewProgress
+                ? `${reviewProgress.done}/${reviewProgress.total}`
+                : '审核中...'
+              : 'AI 审核'}
           </button>
           <button
             onClick={handleAutoFurigana}

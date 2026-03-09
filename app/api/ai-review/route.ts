@@ -4,8 +4,8 @@ const AI_API_URL = process.env.AI_API_URL?.trim().replace(/\/$/, '');
 const AI_API_KEY = process.env.AI_API_KEY?.trim();
 const AI_MODEL = process.env.AI_MODEL?.trim() || 'gpt-4o-mini';
 
-// Keep small — Vercel hobby functions time out at 10 s, Pro at 60 s
-const BATCH_SIZE = 20;
+// Server-side safety cap — client sends batches of 5, this prevents abuse
+const BATCH_SIZE = 5;
 
 interface ReviewItem {
   index: number;
