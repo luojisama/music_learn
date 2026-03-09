@@ -455,12 +455,15 @@ export default function Lyrics() {
 }
 
 /**
- * Safely renders kuroshiro furigana HTML (e.g. <ruby>漢<rt>かん</rt></ruby>)
- * as React elements — no dangerouslySetInnerHTML needed.
+ * Safely renders kuroshiro furigana HTML as React elements.
+ * Handles both formats:
+ *   <ruby>漢<rt>かん</rt></ruby>
+ *   <ruby>漢<rp>(</rp><rt>かん</rt><rp>)</rp></ruby>
  */
 function FuriganaText({ html }: { html: string }) {
   const parts: React.ReactNode[] = [];
-  const regex = /<ruby>([^<]*)<rt>([^<]*)<\/rt><\/ruby>/g;
+  // Match optional <rp>...</rp> before/after <rt>
+  const regex = /<ruby>([^<]*)(?:<rp>[^<]*<\/rp>)?<rt>([^<]*)<\/rt>(?:<rp>[^<]*<\/rp>)?<\/ruby>/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let key = 0;
@@ -470,9 +473,11 @@ function FuriganaText({ html }: { html: string }) {
       parts.push(<span key={key++}>{html.slice(lastIndex, match.index)}</span>);
     }
     parts.push(
-      <ruby key={key++} className="ruby-text">
+      <ruby key={key++}>
         {match[1]}
-        <rt className="text-[0.45em] font-normal tracking-wide">{match[2]}</rt>
+        <rp>(</rp>
+        <rt className="text-[0.5em] font-normal tracking-wide">{match[2]}</rt>
+        <rp>)</rp>
       </ruby>
     );
     lastIndex = match.index + match[0].length;

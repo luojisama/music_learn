@@ -112,8 +112,14 @@ export async function POST(req: NextRequest) {
         const k = await initKuroshiro();
 
         if (furigana) {
-          // Return furigana HTML: <ruby>漢<rt>かん</rt></ruby>
-          const result = await k.convert(text, { to: 'hiragana', mode: 'furigana' });
+          // Return furigana HTML with <rp> fallback tags
+          const raw = await k.convert(text, { to: 'hiragana', mode: 'furigana' });
+          // kuroshiro outputs <ruby>漢<rt>かん</rt></ruby>
+          // Insert <rp> for browsers that don't support ruby natively
+          const result = raw.replace(
+            /<ruby>([^<]*)<rt>([^<]*)<\/rt><\/ruby>/g,
+            '<ruby>$1<rp>(</rp><rt>$2</rt><rp>)</rp></ruby>'
+          );
           return NextResponse.json({ result });
         }
 

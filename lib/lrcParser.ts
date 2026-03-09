@@ -32,7 +32,19 @@ function stripTimestamps(line: string): string {
  */
 function isMeaningless(text: string): boolean {
   // 过滤纯音符、分隔符、空白行
-  return /^[♪♫\-_\s]*$/.test(text);
+  if (/^[♪♫\-_\s]*$/.test(text)) return true;
+
+  // 过滤版权符号开头
+  if (/^[©℗]/.test(text)) return true;
+
+  // 过滤常见歌曲元数据行（作词/作曲/编曲 等关键词后跟冒号）
+  // 支持中文全角冒号（：）和半角冒号（:）
+  if (/^(作词|作詞|作曲|编曲|編曲|词曲|词|曲|作词作曲|作詞作曲|作编曲|作編曲|制作人?|製作人?|出品|监制|監制|策划|企划|翻唱|原唱|演唱|主唱|填词|填詞|改编|改編|混音|录音|录制|後期|后期|和声|和聲|配唱|合声|发行|出版)[：:]/u.test(text)) return true;
+
+  // 过滤英文元数据行
+  if (/^(Lyrics|Music|Words|Melody|Arrangement|Produced|Written|Composed|Arranged)\s*(by)?[：:\s]/i.test(text)) return true;
+
+  return false;
 }
 
 /**
